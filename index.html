@@ -34,7 +34,8 @@
   nav .dot{display:inline-block;width:6px;height:6px;border-radius:50%;
     background:currentColor;margin-left:3px;vertical-align:baseline}
   nav .name{font-family:"Instrument Serif",Georgia,serif;font-weight:400;
-    font-size:38px;letter-spacing:-.005em;line-height:1}
+    font-size:38px;letter-spacing:-.005em;line-height:1;
+    white-space:nowrap}   /* punkten far aldrig hamna pa egen rad */
   .band{position:relative;width:100%;height:clamp(340px,50vh,540px)}
   canvas{display:block;width:100%;height:100%}
   .copy{padding:40px 0 64px;max-width:900px}
@@ -52,13 +53,6 @@
   .banner{background:rgba(21,115,90,.055);border-bottom:1px solid rgba(21,115,90,.13)}
   .banner-in{display:flex;align-items:center;gap:9px 14px;flex-wrap:wrap;
     padding-top:10.5px;padding-bottom:7px;font-size:13.5px;color:var(--muted)}
-  .bmsg{display:flex;align-items:center;gap:10px}
-  .banner .bdot{width:7px;height:7px;border-radius:50%;background:var(--green);flex:none;
-    animation:pulse 2.8s ease-out infinite}
-  @keyframes pulse{
-    0%{box-shadow:0 0 0 0 rgba(21,115,90,.45)}
-    70%{box-shadow:0 0 0 8px rgba(21,115,90,0)}
-    100%{box-shadow:0 0 0 0 rgba(21,115,90,0)}}
   .ghost{margin-left:auto;font:inherit;font-size:13px;line-height:1;cursor:pointer;
     border:1px solid rgba(21,115,90,.32);background:#fff;color:var(--green);
     padding:6px 13px;border-radius:999px;transition:background .15s,color .15s}
@@ -90,17 +84,13 @@
   .note a{color:var(--green)}
   .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
   [hidden]{display:none !important}
-  @media (prefers-reduced-motion: reduce){ .banner .bdot{animation:none} }
 </style>
 </head>
 <body>
 
 <div class="banner">
   <div class="wrap banner-in">
-    <span class="bmsg">
-      <span class="bdot" aria-hidden="true"></span>
-      <span>Just nu med utvalda pilotkunder — lanseras snart.</span>
-    </span>
+    <span>Just nu med utvalda pilotkunder — lanseras snart.</span>
     <button type="button" class="ghost" data-open>Håll mig informerad</button>
   </div>
 </div>
@@ -551,8 +541,12 @@
 
   // ---------- vanster: dokumentens livscykel ----------
   // u 0..1: 0-.20 poppar upp, .20-.74 varden extraheras, .74-1 krymper bort
+  // Varje plats har EGEN periodlangd, inte bara egen fas -- med samma period
+  // foljde dokumenten varandra i jamn takt for alltid. Olika perioder gor att
+  // de driver isar och aldrig gar i takt.
+  var PER=[1.00,1.31,0.84,1.15], OFF=[0.00,0.41,0.73,0.22];
   function slotState(i,t){
-    var raw=t/CYCLE + i/SLOTS;
+    var raw=t/(CYCLE*PER[i%4]) + OFF[i%4];
     var u=raw-Math.floor(raw), lap=Math.floor(raw);
     var idx=((i+lap*SLOTS)%DOC_SET.length+DOC_SET.length)%DOC_SET.length;
     var def=DOCS[DOC_SET[idx]], seed=i*31+lap*7;
@@ -652,20 +646,25 @@
     ctx.strokeStyle=ink(.14); ctx.lineWidth=1; ctx.stroke();
 
     // I boxen star bara ordmarket, pulserande. Satt som loggan: punkten i
-    // samma farg som texten, inte gron.
+    // samma farg som texten, inte gron, och vilande PA baslinjen.
     var pad=Math.max(6,box.w*0.10), w=box.w-pad*2;
     ctx.font='400 10px '+SERIF;
     var u10=ctx.measureText('cimpla').width||26;
     var fs=Math.min(box.h*0.42,w/u10*10*0.86);
-    var puls=0.5+0.5*Math.sin(t*1.9);
+    var puls=0.5+0.5*Math.sin(t*2.0);
     var dr=Math.max(1.2,fs*0.085);
     ctx.font='400 '+fs.toFixed(2)+'px '+SERIF;
     var tw=ctx.measureText('cimpla').width, total=tw+dr*3.4;
     var tx=box.x+(box.w-total)/2, by=box.y+box.h/2+fs*0.34;
-    var a=0.62+0.34*puls;
+    var a=0.26+0.74*puls, sc=0.975+0.05*puls;
+    ctx.save();
+    ctx.translate(box.x+box.w/2,box.y+box.h/2);
+    ctx.scale(sc,sc);
+    ctx.translate(-(box.x+box.w/2),-(box.y+box.h/2));
     T(ctx,'cimpla',tx,by,fs,'400',ink(a.toFixed(3)),'left',SERIF);
-    ctx.beginPath(); ctx.arc(tx+tw+dr*1.7,by-dr*0.2,dr,0,6.2832);
+    ctx.beginPath(); ctx.arc(tx+tw+dr*1.7,by-dr*0.95,dr,0,6.2832);
     ctx.fillStyle=ink(a.toFixed(3)); ctx.fill();
+    ctx.restore();
   }
 
   // ---------- pulserande nod: box -> e-handelsvy ----------
