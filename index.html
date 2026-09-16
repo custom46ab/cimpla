@@ -26,8 +26,8 @@
     -webkit-font-smoothing:antialiased}
   .wrap{max-width:1180px;margin:0 auto;padding:0 24px}
   nav{display:flex;align-items:baseline;gap:10px;padding:26px 0;font-size:14px}
-  nav .dot{display:inline-block;width:9px;height:9px;border-radius:50%;
-    background:var(--green);margin-left:3px;vertical-align:baseline}
+  nav .dot{display:inline-block;width:6px;height:6px;border-radius:50%;
+    background:currentColor;margin-left:3px;vertical-align:baseline}
   nav .name{font-family:"Instrument Serif",Georgia,serif;font-weight:400;
     font-size:38px;letter-spacing:-.005em;line-height:1}
   nav a{margin-left:auto;color:var(--muted);text-decoration:none;font-size:14px}
@@ -753,7 +753,10 @@
         if(n<0) continue;
         var y=headU+8+n*rowH-sc;
         if(y>chU+4||y+cardH<headU-4) continue;
-        var p=clamp01((chU-y)/(chU-headU-6));
+        // p loper fran "hela kortet ar synligt nerifran" till "kortets topp nar
+        // sidhuvudet". Mattes fran kortets TOPP hann falten poppa medan de annu
+        // lag under nederkanten -- kortet kom in halvifyllt.
+        var p=clamp01((chU-cardH-y)/Math.max(1,chU-cardH-headU));
 
         rr(ctx,x,y,cardW,cardH,5);
         ctx.fillStyle='#FFFFFF'; ctx.fill();
@@ -773,10 +776,10 @@
 
         // tre falt till vanster, priset till hoger
         var ty=y+imgH+13, sd=n*17+c2*5;
-        fld(ctx,ix,ty,    iw*0.36,4.5,p,thr(0.24,n,c2,1),0.26,sd);      // kategori
-        fld(ctx,ix,ty+10, iw*0.62,7,  p,thr(0.40,n,c2,2),0.74,sd+40);   // artikelnamn
+        fld(ctx,ix,ty,    iw*0.36,4.5,p,thr(0.12,n,c2,1),0.26,sd);      // kategori
+        fld(ctx,ix,ty+10, iw*0.62,7,  p,thr(0.34,n,c2,2),0.74,sd+40);   // artikelnamn
         fld(ctx,ix,ty+21, iw*0.44,4.5,p,thr(0.56,n,c2,3),0.32,sd+80);   // variant
-        fld(ctx,ix+iw*0.72,ty+8,iw*0.28,8.5,p,thr(0.70,n,c2,4),0.82,sd+120,true); // pris
+        fld(ctx,ix+iw*0.72,ty+8,iw*0.28,8.5,p,thr(0.76,n,c2,4),0.82,sd+120,true); // pris
       }
     }
 
