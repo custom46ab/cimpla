@@ -25,8 +25,9 @@
     font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
     -webkit-font-smoothing:antialiased}
   .wrap{max-width:1180px;margin:0 auto;padding:0 24px}
-  nav{display:flex;align-items:center;gap:14px;padding:26px 0;font-size:14px}
-  nav .dot{width:12px;height:12px;border-radius:50%;background:var(--green);flex:none}
+  nav{display:flex;align-items:baseline;gap:10px;padding:26px 0;font-size:14px}
+  nav .dot{display:inline-block;width:9px;height:9px;border-radius:50%;
+    background:var(--green);margin-left:3px;vertical-align:baseline}
   nav .name{font-family:"Instrument Serif",Georgia,serif;font-weight:400;
     font-size:38px;letter-spacing:-.005em;line-height:1}
   nav a{margin-left:auto;color:var(--muted);text-decoration:none;font-size:14px}
@@ -102,7 +103,7 @@
 </div>
 
 <div class="wrap">
-  <nav><span class="dot"></span><span class="name">cimpla</span><a href="mailto:kontakt@custom46.com">Kontakt</a></nav>
+  <nav><span class="name">cimpla<span class="dot"></span></span><a href="mailto:kontakt@custom46.com">Kontakt</a></nav>
   <div class="band"><canvas id="hero"></canvas></div>
   <div class="copy">
     <h1>Automatisera <em>informationsflödet</em>, från leverantör till ert affärssystem.</h1>
@@ -366,11 +367,11 @@
 
   // ---------- enkla produktbilder i butiken ----------
   // Medvetet blandat sortiment, inte bara sport och klader.
-  var KINDS=10;
-  // Steget 7 ar relativt primt med 10, sa tva kort under varandra i samma
+  var KINDS=18;
+  // Steget 7 ar relativt primt med 18, sa tva kort under varandra i samma
   // kolumn far aldrig samma produkt. SEQ blandar ordningen sa att det inte
   // heller syns som en rullande sekvens.
-  var SEQ=[0,4,7,2,9,5,1,8,3,6];
+  var SEQ=[0,9,4,13,7,16,2,11,5,14,1,10,6,15,3,12,8,17];
   function productKind(n,c){ return SEQ[((n*7+c*3)%KINDS+KINDS)%KINDS]; }
   function drawProduct(c,kind,x,y,w,h){
     function X(n){return x+n*w;}
@@ -437,10 +438,60 @@
         path([0.41,0.30, 0.43,0.22, 0.57,0.22, 0.59,0.30]);
         path([0.34,0.60, 0.66,0.60]);
         break;
-      default: // kaffebryggare
+      case 9: // kaffebryggare
         path([0.32,0.22, 0.62,0.22, 0.62,0.50, 0.32,0.50],true,true);
         path([0.36,0.56, 0.68,0.56, 0.64,0.78, 0.40,0.78],true,true);
         path([0.68,0.60, 0.77,0.65, 0.68,0.71]);
+        break;
+      case 10: // tv
+        box(0.16,0.24,0.68,0.40,0.03);
+        path([0.50,0.64, 0.50,0.74]);
+        path([0.36,0.76, 0.64,0.76]);
+        break;
+      case 11: // armbandsur
+        circle(0.50,0.50,0.185);
+        path([0.41,0.33, 0.39,0.17, 0.61,0.17, 0.59,0.33]);
+        path([0.41,0.67, 0.39,0.83, 0.61,0.83, 0.59,0.67]);
+        path([0.50,0.42, 0.50,0.50, 0.57,0.53]);
+        break;
+      case 12: // bocker
+        box(0.26,0.32,0.12,0.46,0.02);
+        box(0.41,0.25,0.13,0.53,0.02);
+        box(0.57,0.37,0.11,0.41,0.02);
+        break;
+      case 13: // krukvaxt
+        path([0.37,0.58, 0.63,0.58, 0.59,0.80, 0.41,0.80],true,true);
+        path([0.50,0.58, 0.50,0.34]);
+        c.beginPath();
+        c.moveTo(X(0.50),Y(0.44));
+        c.quadraticCurveTo(X(0.28),Y(0.40),X(0.34),Y(0.24)); c.stroke();
+        c.beginPath();
+        c.moveTo(X(0.50),Y(0.40));
+        c.quadraticCurveTo(X(0.72),Y(0.36),X(0.66),Y(0.20)); c.stroke();
+        break;
+      case 14: // kastrull
+        path([0.31,0.42, 0.69,0.42, 0.65,0.72, 0.35,0.72],true,true);
+        path([0.69,0.47, 0.83,0.45]);
+        path([0.27,0.40, 0.73,0.40]);
+        path([0.50,0.40, 0.50,0.32]);
+        break;
+      case 15: // mobiltelefon
+        box(0.36,0.18,0.28,0.64,0.06);
+        path([0.46,0.25, 0.54,0.25]);
+        circle(0.50,0.75,0.022);
+        break;
+      case 16: // tvattmaskin
+        box(0.25,0.22,0.50,0.58,0.03);
+        circle(0.50,0.55,0.135);
+        path([0.31,0.30, 0.41,0.30]);
+        circle(0.68,0.30,0.022);
+        break;
+      default: // solglasogon
+        box(0.17,0.42,0.26,0.19,0.06);
+        box(0.57,0.42,0.26,0.19,0.06);
+        path([0.43,0.47, 0.50,0.44, 0.57,0.47]);
+        path([0.17,0.45, 0.09,0.36]);
+        path([0.83,0.45, 0.91,0.36]);
     }
     c.restore();
   }
@@ -456,7 +507,7 @@
     var bw=narrow?Math.max(40,W*0.085):Math.max(66,W*0.095),
         bh=H*(narrow?0.24:0.30);
     box={w:bw,h:bh,x:W*(narrow?0.395:0.415)-bw/2,y:(H-bh)/2};
-    var brw=W*(narrow?0.42:0.470), brh=H*(narrow?0.74:0.84);
+    var brw=W*(narrow?0.357:0.400), brh=H*(narrow?0.74:0.84);
     br={x:W-brw-W*0.012, y:(H-brh)/2, w:brw, h:brh, chrome:Math.max(15,brh*0.062)};
     scale=br.w/DESIGN;
     chU=(br.h-br.chrome)/scale;
@@ -637,36 +688,28 @@
   }
 
   // ---------- hoger: e-handelsvyn ----------
-  var TNOW=0;                       // aktuell tid, for skelettens skimmer
-  var FILL=0.16;                    // hur lang scrollstracka ett falt tar pa sig
-  // varje falt far sin egen lilla forskjutning sa att de inte fylls samtidigt
+  // varje falt far sin egen lilla forskjutning sa att de inte dyker upp samtidigt
   function thr(base,n,c2,slot){ return base+(hash(n*7+c2*3+slot,13)-0.5)*0.12; }
-  function fadeIn(p,t0){ return clamp01((p-t0)/FILL); }
-  function flash(p,t0){
-    var a=clamp01((p-t0)/0.05), b=1-clamp01((p-t0-0.05)/0.30);
-    return a*b;
-  }
-  // Faltet SKRIVS ut: staplarna byggs av ordblock som dyker upp ett i taget,
-  // det sista klipps mitt i, och en markor blinkar i skrivkanten.
-  function fld(c,x,y,w,h,p,t0,base,seed){
-    var f=fadeIn(p,t0);
-    if(f<0.999) bar(c,x,y,w,h,ink(.07));        // tom textrad som vantar
-    if(f<=0.004) return;
-    var cut=w*clamp01(f*1.05), tint=flash(p,t0);
-    var col=tint>0.02
-      ? 'rgba('+Math.round(lerp(28,21,tint))+','+Math.round(lerp(27,115,tint))+','
-        +Math.round(lerp(25,90,tint))+','+Math.min(1,base+0.20*tint).toFixed(3)+')'
-      : ink(base.toFixed(3));
+  // Faltet POPPAR upp fardigt, gront, och tonar sedan over till graft.
+  // Staplarna ar ordblock sa att raden last som text och inte som en matare.
+  function fld(c,x,y,w,h,p,t0,base,seed,right){
+    if(p<=t0) return;
+    var d=p-t0;
+    var a=clamp01(d/0.020);                       // snabb intoning
+    var s=lerp(1.16,1,easeOut(clamp01(d/0.055))); // liten overskjutning
+    var fade=clamp01((d-0.05)/0.24);              // gron -> graft
+    var col='rgba('+Math.round(lerp(21,28,fade))+','+Math.round(lerp(115,27,fade))+','
+      +Math.round(lerp(90,25,fade))+','+(lerp(0.88,base,fade)*a).toFixed(3)+')';
+    var cy=y+h/2;
+    c.save();
+    c.translate(right?x+w:x,cy); c.scale(s,s); c.translate(right?-(x+w):-x,-cy);
     var gap=Math.max(1.5,h*0.42), pos=0, k=0;
-    while(pos<w-0.5&&pos<cut&&k<24){
+    while(pos<w-0.5&&k<16){
       var ww=Math.min(w-pos,h*(1.5+2.8*hash(seed+k*13,17)));
-      bar(c,x+pos,y,Math.min(ww,cut-pos),h,col);
+      bar(c,x+pos,y,ww,h,col);
       pos+=ww+gap; k++;
     }
-    if(cut<w-0.5){
-      c.fillStyle=g((0.55+0.45*Math.abs(Math.sin(TNOW*7))).toFixed(3));
-      c.fillRect(x+cut,y-1.4,1.6,h+2.8);
-    }
+    c.restore();
   }
 
   function drawShop(t,arrive){
@@ -695,8 +738,8 @@
     var headU=30, pad=16, gap=13;
     var cardW=(DESIGN-pad*2-gap*(cols-1))/cols;
     var imgH=cardW*0.58;
-    var cardH=imgH+95;
-    var rowH=cardH+18;
+    var cardH=imgH+46;
+    var rowH=cardH+17;
 
     // varje kolumn scrollar i sin egen takt, som dessutom varierar langsamt.
     // sc ar integralen av farten, sa rorelsen blir alltid framat.
@@ -728,35 +771,12 @@
         ctx.restore();
         drawProduct(ctx,productKind(n,c2),ix+iw*0.14,iy+imgH*0.10,iw*0.72,imgH*0.80);
 
-        // ALLA falt skrivs ut, ett i taget, pa vagen upp genom vyn
-        var ty=y+imgH+14, sd=n*17+c2*5;
-        fld(ctx,ix,ty,     iw*0.38,4.5,p,thr(0.14,n,c2,1),0.26,sd);       // kategori
-        fld(ctx,ix,ty+10,  iw*0.86,7,  p,thr(0.26,n,c2,2),0.74,sd+40);    // artikelnamn
-        fld(ctx,ix,ty+21,  iw*0.58,4.5,p,thr(0.38,n,c2,3),0.32,sd+80);    // variant
-        // betyg: prickarna tands en och en
-        var rt=thr(0.50,n,c2,4);
-        for(var st=0;st<5;st++){
-          var sa=fadeIn(p,rt+st*0.018);
-          if(sa<=0.02) continue;
-          ctx.beginPath(); ctx.arc(ix+2+st*6,ty+31,1.7,0,6.2832);
-          ctx.fillStyle=ink((0.34*sa).toFixed(3)); ctx.fill();
-        }
-        fld(ctx,ix,ty+37,  iw*0.32,8.5,p,thr(0.60,n,c2,5),0.82,sd+120);   // pris
-        fld(ctx,ix+iw*0.38,ty+39,iw*0.20,4,p,thr(0.68,n,c2,6),0.24,sd+160);// jamforpris
-        // lagerstatus
-        var lt=thr(0.76,n,c2,7), la=fadeIn(p,lt);
-        if(la>0.02){
-          ctx.beginPath(); ctx.arc(ix+2.2,ty+53,2.2,0,6.2832);
-          ctx.fillStyle=g((0.75*la).toFixed(3)); ctx.fill();
-        }
-        fld(ctx,ix+8,ty+51,iw*0.44,4,p,lt,0.28,sd+200);
-        // knapp
-        var bp=fadeIn(p,thr(0.86,n,c2,8));
-        if(bp>0.01){
-          rr(ctx,ix,ty+62,iw,11,5.5);
-          ctx.fillStyle=g((0.16*bp).toFixed(3)); ctx.fill();
-          bar(ctx,ix+iw*0.34,ty+65.5,iw*0.32*bp,4,g((0.70*bp).toFixed(3)));
-        }
+        // tre falt till vanster, priset till hoger
+        var ty=y+imgH+13, sd=n*17+c2*5;
+        fld(ctx,ix,ty,    iw*0.36,4.5,p,thr(0.24,n,c2,1),0.26,sd);      // kategori
+        fld(ctx,ix,ty+10, iw*0.62,7,  p,thr(0.40,n,c2,2),0.74,sd+40);   // artikelnamn
+        fld(ctx,ix,ty+21, iw*0.44,4.5,p,thr(0.56,n,c2,3),0.32,sd+80);   // variant
+        fld(ctx,ix+iw*0.72,ty+8,iw*0.28,8.5,p,thr(0.70,n,c2,4),0.82,sd+120,true); // pris
       }
     }
 
@@ -792,7 +812,6 @@
   // ---------- loop ----------
   function frame(now){
     var t=reduce?9.2:now/1000+9.2;
-    TNOW=t;
     bg();
     var states=[];
     for(var i=0;i<SLOTS;i++) states.push(slotState(i,t));

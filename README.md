@@ -16,12 +16,13 @@ Tre zoner som visar ett flöde från vänster till höger:
 2. **Mitten** – insamlingsboxen. Pulserande streck bär värden dit från varje
    dokument, och en fyllnadsfront vandrar nedåt i boxen.
 3. **Höger** – en e-handelsvy som långsamt scrollar, kolumn för kolumn i olika
-   takt. Produktbilden ligger på plats direkt (enkla streckfigurer: cykel,
-   tröja, sko, elscooter, hörlurar, stol, lampa, borrmaskin, ryggsäck,
-   kaffebryggare). Alla textfält – kategori, artikelnamn, variant, betyg, pris,
-   jämförpris, lagerstatus och köpknapp – är tomma när kortet kommer in
-   underifrån och skrivs ut ett i taget på vägen upp, så att kortet är komplett
-   när det lämnar vyn.
+   takt. Produktbilden ligger på plats direkt; motivet är en av arton enkla
+   streckfigurer (`drawProduct`) och väljs med `productKind()`, som steppar med
+   7 genom en fast permutation — steget är relativt primt med antalet, så två
+   kort under varandra i samma kolumn aldrig får samma produkt. Fälten
+   (kategori, artikelnamn och variant till vänster, pris till höger) poppar upp
+   färdiga ett i taget på vägen upp, gröna i samma ögonblick de dyker upp och
+   tonar sedan över till grafit.
 
 Reglage längst upp i skriptet i `index.html`:
 
