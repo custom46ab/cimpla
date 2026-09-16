@@ -421,21 +421,44 @@
   }
 
   // ---------- hoger: e-handelsvyn ----------
-  function fadeIn(p,thr){ return clamp01((p-thr)/0.10); }
-  function flash(p,thr){
-    var a=clamp01((p-thr)/0.04), b=1-clamp01((p-thr-0.04)/0.13);
-    return a*b*0.8;
+  var TNOW=0;                       // aktuell tid, for skelettens skimmer
+  var FILL=0.16;                    // hur lang scrollstracka ett falt tar pa sig
+  // varje falt far sin egen lilla forskjutning sa att de inte fylls samtidigt
+  function thr(base,n,c2,slot){ return base+(hash(n*7+c2*3+slot,13)-0.5)*0.12; }
+  function fadeIn(p,t0){ return clamp01((p-t0)/FILL); }
+  function flash(p,t0){
+    var a=clamp01((p-t0)/0.05), b=1-clamp01((p-t0-0.05)/0.30);
+    return a*b;
   }
-  function fld(c,x,y,w,h,p,thr,base){
-    var f=fadeIn(p,thr), sk=1-f;
-    if(sk>0.01) bar(c,x,y,w,h,ink((0.085*sk).toFixed(3)));
-    if(f<=0.01) return;
-    var tint=flash(p,thr), rise=(1-f)*3;
+  // skelett som vantar: matt stapel med ett ljust svep over sig
+  function skel(c,x,y,w,h,a){
+    bar(c,x,y,w,h,ink((0.10*a).toFixed(3)));
+    var sw=w*0.45, sx=x-sw+((TNOW*0.42+x*0.013)%1)*(w+sw);
+    c.save(); rr(c,x,y,w,h,Math.min(h/2,2.5)); c.clip();
+    var sg=c.createLinearGradient(sx,0,sx+sw,0);
+    sg.addColorStop(0,'rgba(255,255,255,0)');
+    sg.addColorStop(0.5,'rgba(255,255,255,'+(0.85*a).toFixed(3)+')');
+    sg.addColorStop(1,'rgba(255,255,255,0)');
+    c.fillStyle=sg; c.fillRect(x,y,w,h); c.restore();
+  }
+  // faltet skrivs in fran vanster, med gron blink och en markor i skrivkanten
+  function fld(c,x,y,w,h,p,t0,base){
+    var f=fadeIn(p,t0);
+    if(f<0.999) skel(c,x,y,w,h,1-f*0.55);
+    if(f<=0.004) return;
+    var wipe=easeOut(clamp01(f*1.06)), tint=flash(p,t0);
     var col=tint>0.02
       ? 'rgba('+Math.round(lerp(28,21,tint))+','+Math.round(lerp(27,115,tint))+','
-        +Math.round(lerp(25,90,tint))+','+(base*f).toFixed(3)+')'
-      : ink((base*f).toFixed(3));
-    bar(c,x,y+rise,w*lerp(0.86,1,f),h,col);
+        +Math.round(lerp(25,90,tint))+','+Math.min(1,base+0.20*tint).toFixed(3)+')'
+      : ink(base.toFixed(3));
+    c.save(); rr(c,x,y,w,h,Math.min(h/2,2.5)); c.clip();
+    bar(c,x,y,w*wipe,h,col);
+    c.restore();
+    if(wipe<0.995){
+      var cx2=x+w*wipe;
+      c.fillStyle=g((0.85*clamp01(wipe*6)).toFixed(3));
+      c.fillRect(cx2-1,y-1.6,1.8,h+3.2);
+    }
   }
 
   function drawShop(t,arrive){
@@ -454,59 +477,80 @@
     }
     rr(ctx,br.x+38,br.y+ch*0.24,br.w-52,ch*0.52,ch*0.26);
     ctx.fillStyle='#FFFFFF'; ctx.fill();
-    T(ctx,narrow?'butiken.se':'butiken.se/produkter',br.x+46,br.y+ch*0.70,
-      Math.min(7,ch*0.42,(br.w-64)/12),'',ink(.34),'left',MONO);
+    T(ctx,'www...',br.x+46,br.y+ch*0.70,Math.min(7,ch*0.42),'',ink(.34),'left',MONO);
 
     var cx=br.x, cy=br.y+ch, cw=br.w, chh=br.h-ch;
     ctx.save();
     ctx.beginPath(); ctx.rect(cx,cy,cw,chh); ctx.clip();
     ctx.translate(cx,cy); ctx.scale(scale,scale);
 
-    var scroll=t*SCROLL;
     var headU=30, pad=16, gap=13;
     var cardW=(DESIGN-pad*2-gap*(cols-1))/cols;
     var imgH=cardW*0.64;
     var cardH=imgH+11+7+10+5+12+9;
     var rowH=cardH+20;
 
-    var first=Math.floor((scroll-headU)/rowH)-1;
-    for(var n=first;n<first+Math.ceil(chU/rowH)+3;n++){
-      if(n<0) continue;
-      var yTop=headU+8+n*rowH-scroll;
-      if(yTop>chU+4||yTop+cardH<headU-4) continue;
-      for(var c2=0;c2<cols;c2++){
-        var p=clamp01(clamp01((chU-yTop)/(chU-headU-6))-c2*0.05);
-        var x=pad+c2*(cardW+gap), y=yTop;
+    // varje kolumn scrollar i sin egen takt, som dessutom varierar langsamt.
+    // sc ar integralen av farten, sa rorelsen blir alltid framat.
+    var MULT=[1.00,0.72,1.21], AMP=[0.20,0.32,0.15], WOB=[0.29,0.44,0.21];
+    for(var c2=0;c2<cols;c2++){
+      var m=MULT[c2%3], am=AMP[c2%3], wv=WOB[c2%3];
+      var sc=SCROLL*(m*t+am*(1-Math.cos(t*wv))/wv);
+      var x=pad+c2*(cardW+gap);
+      var first=Math.floor((sc-headU)/rowH)-1;
+      for(var n=first;n<first+Math.ceil(chU/rowH)+3;n++){
+        if(n<0) continue;
+        var y=headU+8+n*rowH-sc;
+        if(y>chU+4||y+cardH<headU-4) continue;
+        var p=clamp01((chU-y)/(chU-headU-6));
+
         rr(ctx,x,y,cardW,cardH,5);
         ctx.fillStyle='#FFFFFF'; ctx.fill();
         ctx.strokeStyle=ink(.09); ctx.lineWidth=0.7; ctx.stroke();
 
-        rr(ctx,x+7,y+7,cardW-14,imgH,4);
-        ctx.fillStyle=ink(.045); ctx.fill();
-        var fi=fadeIn(p,0.16);
-        if(fi>0.01){
-          ctx.save(); rr(ctx,x+7,y+7,cardW-14,imgH,4); ctx.clip();
-          var seed=hash(n*3+c2,11);
-          var ig=ctx.createLinearGradient(x+7,y+7,x+cardW-7,y+7+imgH);
-          ig.addColorStop(0,'rgba('+Math.round(lerp(240,228,seed))+','
-            +Math.round(lerp(238,233,seed))+','+Math.round(lerp(233,226,seed))+','+fi.toFixed(3)+')');
-          ig.addColorStop(1,'rgba(214,211,203,'+(0.85*fi).toFixed(3)+')');
-          ctx.fillStyle=ig; ctx.fillRect(x+7,y+7,cardW-14,imgH);
-          ctx.globalAlpha=fi*0.42;
-          ctx.fillStyle=ink(.34);
-          var sw=(cardW-14)*0.30, sh=imgH*0.46;
-          rr(ctx,x+7+((cardW-14)-sw)/2,y+7+(imgH-sh)/2,sw,sh,sw*0.24); ctx.fill();
-          ctx.globalAlpha=1;
+        // bild
+        var ix=x+7, iy=y+7, iw=cardW-14;
+        var ti=thr(0.14,n,c2,0), fi=fadeIn(p,ti);
+        rr(ctx,ix,iy,iw,imgH,4); ctx.fillStyle=ink(.05); ctx.fill();
+        if(fi<0.999){
+          ctx.save(); rr(ctx,ix,iy,iw,imgH,4); ctx.clip();
+          var shx=ix-iw*0.5+((TNOW*0.42+ix*0.013)%1)*(iw*1.5);
+          var shg=ctx.createLinearGradient(shx,0,shx+iw*0.5,0);
+          shg.addColorStop(0,'rgba(255,255,255,0)');
+          shg.addColorStop(0.5,'rgba(255,255,255,'+(0.8*(1-fi)).toFixed(3)+')');
+          shg.addColorStop(1,'rgba(255,255,255,0)');
+          ctx.fillStyle=shg; ctx.fillRect(ix,iy,iw,imgH);
           ctx.restore();
         }
+        if(fi>0.004){
+          var wi=easeOut(clamp01(fi*1.06));
+          ctx.save();
+          rr(ctx,ix,iy,iw,imgH,4); ctx.clip();
+          ctx.beginPath(); ctx.rect(ix,iy,iw*wi,imgH); ctx.clip();
+          var seed=hash(n*3+c2,11);
+          var ig=ctx.createLinearGradient(ix,iy,ix+iw,iy+imgH);
+          ig.addColorStop(0,'rgb('+Math.round(lerp(240,228,seed))+','
+            +Math.round(lerp(238,233,seed))+','+Math.round(lerp(233,226,seed))+')');
+          ig.addColorStop(1,'rgb(214,211,203)');
+          ctx.fillStyle=ig; ctx.fillRect(ix,iy,iw,imgH);
+          ctx.globalAlpha=0.42; ctx.fillStyle=ink(.34);
+          var sw=iw*0.30, sh=imgH*0.46;
+          rr(ctx,ix+(iw-sw)/2,iy+(imgH-sh)/2,sw,sh,sw*0.24); ctx.fill();
+          ctx.globalAlpha=1;
+          var tf2=flash(p,ti);
+          if(tf2>0.02){ ctx.fillStyle=g((0.22*tf2).toFixed(3)); ctx.fillRect(ix,iy,iw,imgH); }
+          ctx.restore();
+          if(wi<0.995){ ctx.fillStyle=g('.75'); ctx.fillRect(ix+iw*wi-1,iy,2,imgH); }
+        }
+
         var ty=y+imgH+18;
-        fld(ctx,x+7,ty,    (cardW-14)*0.82,6.5,p,0.36,0.68);
-        fld(ctx,x+7,ty+11, (cardW-14)*0.54,4.5,p,0.52,0.30);
-        fld(ctx,x+7,ty+23, (cardW-14)*0.34,8,  p,0.68,0.80);
-        var bp=fadeIn(p,0.84);
+        fld(ctx,ix,ty,    iw*0.82,6.5,p,thr(0.34,n,c2,1),0.72);
+        fld(ctx,ix,ty+11, iw*0.54,4.5,p,thr(0.50,n,c2,2),0.32);
+        fld(ctx,ix,ty+23, iw*0.34,8,  p,thr(0.66,n,c2,3),0.82);
+        var bp=fadeIn(p,thr(0.82,n,c2,4));
         if(bp>0.01){
           rr(ctx,x+cardW-7-26,ty+23,26,9,4.5);
-          ctx.fillStyle=g((0.16*bp).toFixed(3)); ctx.fill();
+          ctx.fillStyle=g((0.18*bp).toFixed(3)); ctx.fill();
         }
       }
     }
@@ -543,6 +587,7 @@
   // ---------- loop ----------
   function frame(now){
     var t=reduce?9.2:now/1000+9.2;
+    TNOW=t;
     bg();
     var states=[];
     for(var i=0;i<SLOTS;i++) states.push(slotState(i,t));
