@@ -522,7 +522,7 @@
     docCX = pull(VW*0.165);
     docSX = VW*0.080*(1-sq);   // hur brett dokumenten sprids i sidled
     docSY = H*0.24;            // ... och i hojdled
-    var bw=VW*0.095, bh=H*0.30;
+    var bw=VW*0.115, bh=H*0.20;
     box={w:bw,h:bh,x:pull(VW*0.457)-bw/2,y:(H-bh)/2};
     var brw=VW*0.400, brh=H*0.84;
     br={x:pull(VW-brw/2-VW*0.012)-brw/2, y:(H-brh)/2, w:brw, h:brh,
@@ -651,41 +651,21 @@
     rr(ctx,box.x+0.5,box.y+0.5,box.w-1,box.h-1,9);
     ctx.strokeStyle=ink(.14); ctx.lineWidth=1; ctx.stroke();
 
-    // rubrik: ordmarket, sa att det framgar att boxen ar cimpla
-    var pad=Math.max(6,box.w*0.09), x=box.x+pad, w=box.w-pad*2;
+    // I boxen star bara ordmarket, pulserande. Satt som loggan: punkten i
+    // samma farg som texten, inte gron.
+    var pad=Math.max(6,box.w*0.10), w=box.w-pad*2;
     ctx.font='400 10px '+SERIF;
     var u10=ctx.measureText('cimpla').width||26;
-    var fs=Math.min(box.h*0.13,(w-box.w*0.06)/u10*10);
-    var puls=0.5+0.5*Math.sin(t*2.2);
-    var base=box.y+pad+fs*0.84;
-    T(ctx,'cimpla',x,base,fs,'400',ink((0.72+0.24*puls).toFixed(3)),'left',SERIF);
-    var dr=Math.max(1.3,fs*0.10);
-    ctx.beginPath(); ctx.arc(x+ctx.measureText('cimpla').width+dr*1.7,base,dr,0,6.2832);
-    ctx.fillStyle=g((0.45+0.55*puls).toFixed(3)); ctx.fill();
-    ctx.fillStyle=ink(.10); ctx.fillRect(x,box.y+pad+fs*1.32,w,0.8);
-
-    var top=box.y+pad+fs*1.32+8, bot=box.y+box.h-pad-9, rows=Math.max(3,Math.floor((bot-top)/11));
-    var rh=(bot-top)/rows;
-    ctx.save();
-    rr(ctx,box.x+1,top-3,box.w-2,bot-top+8,6); ctx.clip();
-    // en fyllnadsfront vandrar nedat och nollstalls, som en insamling som gors om
-    var front=((t*0.20)%1)*(rows+1.5);
-    for(var r=0;r<rows;r++){
-      var y=top+r*rh, f=clamp01(front-r);
-      bar(ctx,x,y,w,4.4,ink(.075));
-      if(f>0.01) bar(ctx,x,y,Math.max(0.5,w*(0.32+0.68*f)*f),4.4,g((0.30+0.45*f).toFixed(3)));
-    }
-    var sy=top+((t*0.35)%1)*(bot-top);
-    var lg=ctx.createLinearGradient(0,sy-12,0,sy+3);
-    lg.addColorStop(0,g('0')); lg.addColorStop(1,g('.13'));
-    ctx.fillStyle=lg; ctx.fillRect(box.x+1,sy-12,box.w-2,15);
-    ctx.restore();
-
-    var ry=box.y+box.h-pad, cx=box.x+pad+((t*0.5)%1)*(box.w-pad*2);
-    ctx.fillStyle=ink(.10); ctx.fillRect(box.x+pad,ry,box.w-pad*2,1);
-    var hg=ctx.createLinearGradient(cx-box.w*0.2,0,cx+box.w*0.2,0);
-    hg.addColorStop(0,g('0')); hg.addColorStop(0.5,g('.75')); hg.addColorStop(1,g('0'));
-    ctx.fillStyle=hg; ctx.fillRect(cx-box.w*0.2,ry-0.5,box.w*0.4,2);
+    var fs=Math.min(box.h*0.42,w/u10*10*0.86);
+    var puls=0.5+0.5*Math.sin(t*1.9);
+    var dr=Math.max(1.2,fs*0.085);
+    ctx.font='400 '+fs.toFixed(2)+'px '+SERIF;
+    var tw=ctx.measureText('cimpla').width, total=tw+dr*3.4;
+    var tx=box.x+(box.w-total)/2, by=box.y+box.h/2+fs*0.34;
+    var a=0.62+0.34*puls;
+    T(ctx,'cimpla',tx,by,fs,'400',ink(a.toFixed(3)),'left',SERIF);
+    ctx.beginPath(); ctx.arc(tx+tw+dr*1.7,by-dr*0.2,dr,0,6.2832);
+    ctx.fillStyle=ink(a.toFixed(3)); ctx.fill();
   }
 
   // ---------- pulserande nod: box -> e-handelsvy ----------
