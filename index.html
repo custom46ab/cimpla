@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>cimpla</title>
+<meta name="description" content="cimpla förenklar informationsflödet kring produktdata och leverantörsinformation. Del av custom46 AB.">
+<link rel="canonical" href="https://cimpla.se/">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#15735A">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="cimpla">
+<meta property="og:title" content="cimpla">
+<meta property="og:description" content="Förenkla informationsflödet.">
+<meta property="og:url" content="https://cimpla.se/">
+<meta property="og:image" content="https://cimpla.se/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="fonts.css">
+<style>
+  :root{ --ink:#1C1B19; --muted:#6B665E; --green:#15735A; }
+  *{box-sizing:border-box}
+  body{margin:0;background:#fff;color:var(--ink);
+    font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+  nav{display:flex;align-items:center;gap:10px;padding:26px 0;font-size:14px}
+  nav .dot{width:8px;height:8px;border-radius:50%;background:var(--green)}
+  nav .name{font-family:"Instrument Serif",Georgia,serif;font-weight:400;
+    font-size:25px;letter-spacing:-.005em;line-height:1}
+  nav a{margin-left:auto;color:var(--muted);text-decoration:none;font-size:14px}
+  nav a:hover{color:var(--ink)}
+  .band{position:relative;width:100%;height:clamp(340px,50vh,540px)}
+  canvas{display:block;width:100%;height:100%}
+  .copy{padding:40px 0 64px;max-width:680px}
+  footer{display:flex;flex-wrap:wrap;gap:12px 16px;align-items:baseline;
+    border-top:1px solid rgba(28,27,25,.10);padding:22px 0 44px;
+    font-size:13px;color:var(--muted)}
+  footer a{color:var(--muted);text-decoration:none;margin-left:auto}
+  footer a:hover{color:var(--ink)}
+  h1{font-family:"Instrument Serif",Georgia,serif;font-weight:400;
+    font-size:clamp(34px,5.2vw,58px);line-height:1.06;letter-spacing:-.012em;margin:0 0 22px}
+  h1 em{font-style:italic;color:var(--green)}
+  p{margin:0;color:var(--muted);font-size:17px;line-height:1.65;max-width:560px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav><span class="dot"></span><span class="name">cimpla</span><a href="mailto:kontakt@custom46.com">Kontakt</a></nav>
+  <div class="band"><canvas id="hero"></canvas></div>
+  <div class="copy">
+    <h1>Förenkla <em>informationsflödet</em>.</h1>
+    <p>Lägger ni tid på att strukturera produktdata och söka igenom leverantörsinfo? Sluta med det.</p>
+  </div>
+
+  <footer>
+    <span>Del av custom46 AB</span>
+    <a href="mailto:kontakt@custom46.com">kontakt@custom46.com</a>
+  </footer>
+</div>
+
+<script>
+(function(){
+  var cv=document.getElementById('hero'), ctx=cv.getContext('2d');
+  var off=document.createElement('canvas'), oc=off.getContext('2d');
+  var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ---- vilka dokumenttyper som roterar. korta ner listan for att valja bort nagon ----
+  var DOC_SET=[0,1,2,3,4,5];
+
+  var OUT='ABCDEFGHJKLMNPQRSTUVWXYZ0123456789';
+  var LPS=7/6, FOV=3.4, UP=0.60, SLOTS=3, SPEED=0.072;
+  function lerp(a,b,t){return a+(b-a)*t;}
+  function clamp01(t){return t<0?0:t>1?1:t;}
+  function hash(n,s){var x=Math.sin(n*127.1+s*311.7)*43758.5453;return x-Math.floor(x);}
+
+  var OUT_R=21,OUT_G=115,OUT_B=90, INK_R=28,INK_G=27,INK_B=25;
+  var INK='#1C1B19', SOFT='rgba(28,27,25,.62)', FAINT='rgba(28,27,25,.38)';
+  var RULE='rgba(28,27,25,.13)', GRID='rgba(28,27,25,.10)';
+  var SANS='"IBM Plex Sans",system-ui,sans-serif';
+  var MONO='"IBM Plex Mono",ui-monospace,Menlo,monospace';
+  var HAND='"Caveat",cursive';
+
+  var W,H,DPR,SS,readX;
+  var panel,pw,ph,pad,headerH,cTop,cBot,wY,lblX,lblW,sX=[],cols=10,visible=7,LH=26,fs=13;
+
+  function ls(c,v){ try{ c.letterSpacing=(v||0)+'px'; }catch(e){} }
+  function T(c,s,x,y,size,weight,col,align,face){
+    c.font=(weight?weight+' ':'')+size.toFixed(2)+'px '+(face||SANS);
+    c.textAlign=align||'left'; c.textBaseline='alphabetic';
+    c.fillStyle=col; c.fillText(s,x,y);
+  }
+  function rule(c,x0,y,x1,col){
+    c.strokeStyle=col||RULE; c.lineWidth=0.6;
+    c.beginPath(); c.moveTo(x0,y+0.3); c.lineTo(x1,y+0.3); c.stroke();
+  }
+  function rr(c,x,y,w,h,r){
+    c.beginPath(); c.moveTo(x+r,y);
+    c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r);
+    c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath();
+  }
+
+  // ---------- innehall i illustrationerna ----------
+  var ROWS=[
+    ['4 st',  '55-1187','Filterinsats 50 mm'],
+    ['12 st', '22-0043','Packningssats standard'],
+    ['2 st',  '71-9920','Kabelstege 200 cm']
+  ];
+  var SHEET=[
+    ['55-1187','Filterinsats 50 mm','4','1 249,00'],
+    ['22-0043','Packningssats standard','12','89,00'],
+    ['71-9920','Kabelstege 200 cm','2','749,00'],
+    ['30-4451','Distansbricka M8','6','399,00'],
+    ['12-8802','Skyddshandske stl 9','24','79,00'],
+    ['64-2210','Slangklämma 32 mm','8','529,00'],
+    ['88-0177','Kopplingsdosa IP65','1','2 490,00'],
+    ['45-3390','Tätningslist 10 m','10','149,00']
+  ];
+  var CONF=[
+    ['55-1187','Filterinsats 50 mm','4','4 996,00'],
+    ['22-0043','Packningssats standard','12','1 068,00'],
+    ['71-9920','Kabelstege 200 cm','2','1 498,00'],
+    ['30-4451','Distansbricka M8','6','2 394,00'],
+    ['12-8802','Skyddshandske stl 9','24','1 896,00']
+  ];
+
+  var DOCS=[
+    { type:0, lw:210, lh:268, tint:'#FFFFFF', skew:0     }, // mejl
+    { type:1, lw:244, lh:198, tint:'#FFFFFF', skew:0     }, // kalkylblad
+    { type:2, lw:210, lh:297, tint:'#FCFBF6', skew:0.022 }, // skannad bekraftelse
+    { type:3, lw:198, lh:250, tint:'#FBF7EA', skew:0.030 }, // handskriven lapp
+    { type:4, lw:186, lh:320, tint:'#FFFFFF', skew:0     }, // chattrad
+    { type:5, lw:300, lh:200, tint:'#FFFFFF', skew:0     }  // portalvy
+  ];
+
+  function fieldsOf(d){
+    switch(d.type){
+      case 0: return [{x:146,y:36.5,w:52,h:8},
+                      {x:14,y:90,w:150,h:11},{x:14,y:100,w:150,h:11},{x:14,y:110,w:150,h:11}];
+      case 1: return [{x:168,y:27,w:30,h:15},{x:168,y:42,w:30,h:15},{x:168,y:57,w:30,h:15},
+                      {x:168,y:72,w:30,h:15},{x:168,y:87,w:30,h:15},
+                      {x:16,y:27,w:50,h:15},{x:16,y:42,w:50,h:15}];
+      case 2: return [{x:146,y:29,w:50,h:10},{x:146,y:40,w:50,h:7},
+                      {x:150,y:100,w:46,h:52},{x:112,y:182,w:84,h:12}];
+      case 3: return [{x:20,y:57,w:124,h:18},{x:20,y:77,w:124,h:18},{x:20,y:97,w:124,h:18},
+                      {x:20,y:129,w:98,h:18}];
+      case 4: return [{x:14,y:86,w:112,h:36},{x:14,y:224,w:122,h:21}];
+      default:return [{x:118,y:40,w:60,h:13},{x:196,y:40,w:34,h:13},
+                      {x:208,y:74,w:34,h:76}];
+    }
+  }
+
+  // ---------- dokumenttyper ----------
+  function drawMail(c,d){
+    var lw=d.lw;
+    c.fillStyle='#F3F2EF'; c.fillRect(0,0,lw,15);
+    rule(c,0,15,lw,'rgba(28,27,25,.10)');
+    for(var i=0;i<3;i++){ c.beginPath(); c.arc(9+i*7,7.5,2,0,6.2832); c.fillStyle='#D9D7D2'; c.fill(); }
+    rr(c,lw-64,4,54,7,3.5); c.fillStyle='#E7E5E0'; c.fill();
+
+    T(c,'Beställning vecka 38',14,31,9.5,'600',INK);
+    T(c,'Nordvik Handel AB',14,42,5.8,'600','rgba(28,27,25,.78)');
+    T(c,'order@nordvikhandel.se',68,42,5.6,'',FAINT);
+    T(c,'18 sep 09:14',196,42,5.6,'',FAINT,'right');
+    T(c,'till  inkop@savjaindustri.se',14,50,5.6,'',FAINT);
+    rule(c,14,56,196);
+
+    var body=['Hej,','Vi behöver följande till lagret i Sollentuna inför',
+              'helgen. Leverans senast fredag den 25:e.'];
+    for(var b=0;b<body.length;b++) T(c,body[b],14,68+b*8.4,6,'','rgba(28,27,25,.74)');
+    for(var r=0;r<ROWS.length;r++){
+      var y=98+r*10;
+      T(c,ROWS[r][0],14,y,6,'500','rgba(28,27,25,.82)','left',MONO);
+      T(c,ROWS[r][1],40,y,6,'','rgba(28,27,25,.62)','left',MONO);
+      T(c,ROWS[r][2],78,y,6,'','rgba(28,27,25,.74)');
+    }
+    T(c,'Hör av er om något saknas.',14,140,6,'','rgba(28,27,25,.74)');
+    T(c,'Mvh Mattias',14,152,6,'','rgba(28,27,25,.74)');
+
+    rr(c,14,164,74,14,3); c.fillStyle='#F4F3F0'; c.fill();
+    c.strokeStyle='rgba(28,27,25,.12)'; c.lineWidth=0.6; c.stroke();
+    rr(c,19,168,6,6,1); c.fillStyle='rgba(21,115,90,.55)'; c.fill();
+    T(c,'orderlista.xlsx',29,173.5,5.6,'','rgba(28,27,25,.66)');
+
+    c.fillStyle='rgba(28,27,25,.10)'; c.fillRect(14,192,1.2,46);
+    for(var q=0;q<5;q++){ c.fillStyle='rgba(28,27,25,.13)';
+      c.fillRect(21,196+q*9,(70+45*hash(q,3)),2.2); }
+  }
+
+  function drawSheet(c,d){
+    var lw=d.lw, lh=d.lh, gut=16, rowH=15, top=12;
+    var colX=[16,66,168,198,244], heads=['A','B','C','D'];
+    c.fillStyle='#F4F3F0'; c.fillRect(0,0,lw,top); c.fillRect(0,0,gut,lh);
+    for(var i=0;i<4;i++) T(c,heads[i],(colX[i]+colX[i+1])/2,8.5,5.4,'',FAINT,'center',MONO);
+    c.strokeStyle=GRID; c.lineWidth=0.5;
+    for(var v=0;v<colX.length;v++){ c.beginPath(); c.moveTo(colX[v]+0.25,0); c.lineTo(colX[v]+0.25,lh); c.stroke(); }
+    var rows=Math.floor((lh-top)/rowH);
+    for(var r=0;r<=rows;r++){
+      var y=top+r*rowH;
+      c.beginPath(); c.moveTo(0,y+0.25); c.lineTo(lw,y+0.25); c.stroke();
+      if(r<rows) T(c,String(r+1),gut/2,y+rowH/2+2,5,'',FAINT,'center',MONO);
+    }
+    var hd=['Artnr','Benämning','Antal','Á-pris'];
+    c.fillStyle='rgba(28,27,25,.045)'; c.fillRect(gut,top,lw-gut,rowH);
+    for(var h=0;h<hd.length;h++) T(c,hd[h],colX[h]+4,top+10,6,'600','rgba(28,27,25,.80)');
+    for(var s=0;s<SHEET.length;s++){
+      var yy=top+(s+1)*rowH+10;
+      T(c,SHEET[s][0],colX[0]+4,yy,5.9,'','rgba(28,27,25,.72)','left',MONO);
+      T(c,SHEET[s][1],colX[1]+4,yy,5.9,'','rgba(28,27,25,.78)');
+      T(c,SHEET[s][2],colX[3]-4,yy,5.9,'500','rgba(28,27,25,.82)','right',MONO);
+      T(c,SHEET[s][3],colX[4]-4,yy,5.9,'','rgba(28,27,25,.72)','right',MONO);
+    }
+  }
+
+  function drawConfirm(c,d){
+    var lw=d.lw;
+    rr(c,16,17,15,15,2.5); c.fillStyle='#23221F'; c.fill();
+    ls(c,0.6); T(c,'NORDVIK',36,27,9.5,'600',INK); ls(c,1.4);
+    T(c,'HANDEL AB',36,34.5,4.8,'',FAINT); ls(c,0);
+    ls(c,1.2); T(c,'ORDERBEKRÄFTELSE',196,24,5.6,'500','rgba(28,27,25,.55)','right'); ls(c,0);
+    T(c,'24-1187',196,37,11,'600',INK,'right',MONO);
+    T(c,'2026-09-18',196,45.5,5.6,'',SOFT,'right',MONO);
+
+    var adr=['Sävja Industriservice AB','Malmvägen 12','191 61 Sollentuna'];
+    for(var i=0;i<adr.length;i++) T(c,adr[i],16,66+i*7.6,5.6,i===0?'500':'',i===0?SOFT:FAINT);
+    T(c,'Leverans',120,66,5.4,'',FAINT);
+    T(c,'v.38, fritt levererat',196,66,5.6,'',SOFT,'right');
+    T(c,'Betalvillkor',120,73.6,5.4,'',FAINT);
+    T(c,'30 dagar netto',196,73.6,5.6,'',SOFT,'right');
+
+    rule(c,16,90,196);
+    T(c,'Artnr',16,99,5.4,'600','rgba(28,27,25,.62)');
+    T(c,'Benämning',58,99,5.4,'600','rgba(28,27,25,.62)');
+    T(c,'Antal',168,99,5.4,'600','rgba(28,27,25,.62)','right');
+    T(c,'Belopp',196,99,5.4,'600','rgba(28,27,25,.62)','right');
+    rule(c,16,103,196,'rgba(28,27,25,.20)');
+    for(var r=0;r<CONF.length;r++){
+      var y=114+r*10.4;
+      T(c,CONF[r][0],16,y,5.8,'',SOFT,'left',MONO);
+      T(c,CONF[r][1],58,y,5.8,'','rgba(28,27,25,.78)');
+      T(c,CONF[r][2],168,y,5.8,'500','rgba(28,27,25,.85)','right',MONO);
+      T(c,CONF[r][3],196,y,5.8,'',SOFT,'right',MONO);
+      if(r<CONF.length-1) rule(c,16,y+3.6,196,'rgba(28,27,25,.07)');
+    }
+    rule(c,112,172,196);
+    T(c,'Netto',112,181,5.6,'',FAINT);  T(c,'16 072,00',196,181,5.8,'',SOFT,'right',MONO);
+    T(c,'Moms 25 %',112,190,5.6,'',FAINT); T(c,'4 018,00',196,190,5.8,'',SOFT,'right',MONO);
+    rule(c,112,195,196,'rgba(28,27,25,.20)');
+    T(c,'Att betala',112,205,6.4,'600',INK);
+    T(c,'20 090,00',196,205,7.6,'600',INK,'right',MONO);
+    rule(c,16,262,196,'rgba(28,27,25,.10)');
+    T(c,'Nordvik Handel AB  ·  Org.nr 556412-0098  ·  Godkänd för F-skatt',16,270,4.4,'',
+      'rgba(28,27,25,.32)');
+
+    var sg=c.createLinearGradient(0,0,26,0);
+    sg.addColorStop(0,'rgba(28,27,25,.09)'); sg.addColorStop(1,'rgba(28,27,25,0)');
+    c.fillStyle=sg; c.fillRect(0,0,26,d.lh);
+    var tg=c.createLinearGradient(0,0,0,10);
+    tg.addColorStop(0,'rgba(28,27,25,.06)'); tg.addColorStop(1,'rgba(28,27,25,0)');
+    c.fillStyle=tg; c.fillRect(0,0,lw,10);
+  }
+
+  // FORSLAG 1: handskriven lapp, fotograferad
+  function drawNote(c,d){
+    var lw=d.lw, lh=d.lh;
+    // linjerat papper
+    c.strokeStyle='rgba(90,120,140,.20)'; c.lineWidth=0.6;
+    for(var y=40;y<lh-12;y+=20){ c.beginPath(); c.moveTo(12,y+0.3); c.lineTo(lw-12,y+0.3); c.stroke(); }
+    c.strokeStyle='rgba(190,90,80,.22)';
+    c.beginPath(); c.moveTo(24,0); c.lineTo(24,lh); c.stroke();
+    // perforerad ovankant
+    c.fillStyle='#FFFFFF';
+    c.beginPath(); c.moveTo(0,0); c.lineTo(lw,0); c.lineTo(lw,7);
+    for(var x=lw;x>=0;x-=9) c.lineTo(x, 7 - (x/9%2?2.6:0));
+    c.closePath(); c.fill();
+
+    T(c,'Order 18/9',22,34,15,'600','rgba(30,45,70,.80)','left',HAND);
+    var lines=['4 st filterinsats 50','12 packningssats std','2 kabelstege 200','lev. fredag!'];
+    for(var i=0;i<lines.length;i++)
+      T(c,lines[i],22,70+i*20+(i===3?12:0),13.5,'','rgba(30,45,70,.78)','left',HAND);
+    T(c,'/ Mattias',22,lh-34,13,'','rgba(30,45,70,.62)','left',HAND);
+
+    // fotoljus och en svag skugga i vecket
+    var pg=c.createLinearGradient(0,0,lw,lh);
+    pg.addColorStop(0,'rgba(255,255,255,.35)');
+    pg.addColorStop(.55,'rgba(255,255,255,0)');
+    pg.addColorStop(1,'rgba(40,34,24,.10)');
+    c.fillStyle=pg; c.fillRect(0,0,lw,lh);
+  }
+
+  // FORSLAG 2: chattrad, skarmdump fran telefon
+  function drawChat(c,d){
+    var lw=d.lw, lh=d.lh;
+    c.fillStyle='#F7F6F4'; c.fillRect(0,0,lw,lh);
+    // statusrad + huvud
+    T(c,'09:14',12,11,5,'600','rgba(28,27,25,.55)');
+    T(c,'▁▃▅  ▮',lw-12,11,5,'',FAINT,'right');
+    c.fillStyle='#FFFFFF'; c.fillRect(0,16,lw,26);
+    rule(c,0,42,lw,'rgba(28,27,25,.10)');
+    c.beginPath(); c.arc(20,29,8,0,6.2832); c.fillStyle='#E3E1DC'; c.fill();
+    T(c,'NH',20,31.5,6,'600','rgba(28,27,25,.45)','center');
+    T(c,'Nordvik Handel',34,27,6.6,'600',INK);
+    T(c,'Mattias L.',34,35,5.2,'',FAINT);
+
+    function bubble(x,y,w,h,mine){
+      rr(c,x,y,w,h,7); c.fillStyle=mine?'#DCEDE5':'#FFFFFF'; c.fill();
+      if(!mine){ c.strokeStyle='rgba(28,27,25,.08)'; c.lineWidth=0.6; c.stroke(); }
+    }
+    bubble(12,54,132,22,false);
+    T(c,'Hej! Kan ni bekräfta det här',19,63,5.6,'','rgba(28,27,25,.78)');
+    T(c,'till fredag?',19,71,5.6,'','rgba(28,27,25,.78)');
+
+    bubble(12,82,118,50,false);
+    var q=['4 st   55-1187','12 st  22-0043','2 st   71-9920'];
+    for(var i=0;i<q.length;i++) T(c,q[i],19,94+i*11,5.8,'500','rgba(28,27,25,.82)','left',MONO);
+
+    bubble(lw-116,140,104,20,true);
+    T(c,'Absolut, återkommer strax.',lw-109,152,5.6,'','rgba(20,60,45,.85)');
+
+    bubble(12,168,126,20,false);
+    T(c,'Lagret i Sollentuna.',19,180,5.6,'','rgba(28,27,25,.78)');
+
+    bubble(lw-104,196,92,20,true);
+    T(c,'Noterat. Tack!',lw-97,208,5.6,'','rgba(20,60,45,.85)');
+
+    bubble(12,224,132,24,false);
+    T(c,'Leverans senast fredag',19,233,5.6,'','rgba(28,27,25,.78)');
+    T(c,'den 25:e.',19,241,5.6,'','rgba(28,27,25,.78)');
+    T(c,'09:21',12,258,4.6,'',FAINT);
+
+    // inmatningsfalt
+    c.fillStyle='#FFFFFF'; c.fillRect(0,lh-30,lw,30);
+    rule(c,0,lh-30,lw,'rgba(28,27,25,.10)');
+    rr(c,12,lh-23,lw-46,16,8); c.fillStyle='#F2F1EE'; c.fill();
+    T(c,'Meddelande',20,lh-12,5.4,'',FAINT);
+    c.beginPath(); c.arc(lw-19,lh-15,8,0,6.2832); c.fillStyle='rgba(21,115,90,.85)'; c.fill();
+  }
+
+  // FORSLAG 3: kundportal i webblasare
+  function drawPortal(c,d){
+    var lw=d.lw, lh=d.lh;
+    c.fillStyle='#EFEEEB'; c.fillRect(0,0,lw,22);
+    for(var i=0;i<3;i++){ c.beginPath(); c.arc(11+i*8,11,2.2,0,6.2832); c.fillStyle='#D6D4CF'; c.fill(); }
+    rr(c,40,5,lw-52,12,6); c.fillStyle='#FFFFFF'; c.fill();
+    T(c,'portal.nordvikhandel.se/order/24-1187',48,13.5,5.2,'',FAINT,'left',MONO);
+    c.fillStyle='#FFFFFF'; c.fillRect(0,22,lw,lh-22);
+
+    // sidomeny
+    c.fillStyle='#F7F6F4'; c.fillRect(0,22,58,lh-22);
+    rr(c,10,32,26,6,3); c.fillStyle='rgba(28,27,25,.30)'; c.fill();
+    var nav=['Översikt','Order','Leveranser','Fakturor','Inställningar'];
+    for(var n=0;n<nav.length;n++){
+      if(n===1){ rr(c,6,50+n*15-9,46,13,3); c.fillStyle='rgba(21,115,90,.10)'; c.fill(); }
+      T(c,nav[n],12,50+n*15,5.6,n===1?'600':'',n===1?'rgba(21,115,90,.95)':'rgba(28,27,25,.55)');
+    }
+
+    T(c,'Order',70,40,6,'',FAINT);
+    T(c,'24-1187',118,46,13,'600',INK,'left',MONO);
+    rr(c,196,36,34,13,6.5); c.fillStyle='rgba(21,115,90,.12)'; c.fill();
+    T(c,'Ny',213,45,5.6,'600','rgba(21,115,90,.95)','center');
+    rr(c,lw-70,34,58,17,4); c.fillStyle='#23221F'; c.fill();
+    T(c,'Bekräfta',lw-41,45,5.8,'500','#fff','center');
+
+    rule(c,70,62,lw-12);
+    var hd=['Artnr','Benämning','Antal','Belopp'], hx=[70,120,240,lw-12];
+    for(var h=0;h<4;h++) T(c,hd[h],hx[h],72,5.4,'600','rgba(28,27,25,.55)',h>1?'right':'left');
+    rule(c,70,76,lw-12,'rgba(28,27,25,.16)');
+    for(var r=0;r<5;r++){
+      var y=88+r*15;
+      T(c,CONF[r][0],70,y,5.8,'',SOFT,'left',MONO);
+      T(c,CONF[r][1],120,y,5.8,'','rgba(28,27,25,.78)');
+      T(c,CONF[r][2],240,y,5.8,'500','rgba(28,27,25,.85)','right',MONO);
+      T(c,CONF[r][3],lw-12,y,5.8,'',SOFT,'right',MONO);
+      rule(c,70,y+4,lw-12,'rgba(28,27,25,.07)');
+    }
+    T(c,'Summa',236,178,5.6,'',FAINT,'right');
+    T(c,'20 090,00',lw-12,178,6.6,'600',INK,'right',MONO);
+  }
+
+  var PAINT=[drawMail,drawSheet,drawConfirm,drawNote,drawChat,drawPortal];
+
+  // ---------- scen ----------
+  function layout(){
+    var narrow=W<760;
+    cols=narrow?7:10; visible=narrow?5:7;
+    readX=W*0.365;
+    panel={x:W*0.552,y:H*0.14,w:W*0.408,h:H*0.72};
+    pw=panel.w; ph=panel.h;
+    pad=Math.max(12,pw*0.055); headerH=26;
+    LH=(ph-pad*2-headerH)/visible;
+    cTop=pad+headerH; cBot=ph-pad; wY=cBot-LH*0.62;
+    lblX=pad; lblW=pw*0.155;
+    var sx=lblX+lblW+14, sw=(pw-pad)-sx, unit=sw/(cols+1.4);
+    fs=Math.min(unit*1.06,LH*0.52,15);
+    sX=[]; var x=sx+unit*0.5;
+    for(var c=0;c<cols;c++){ if(c===3||c===6) x+=unit*0.7; sX.push(x); x+=unit; }
+    SS=DPR; off.width=Math.round(pw*SS); off.height=Math.round(ph*SS);
+  }
+  function resize(){
+    DPR=Math.min(window.devicePixelRatio||1,2);
+    var r=cv.getBoundingClientRect(); W=r.width; H=r.height;
+    cv.width=Math.round(W*DPR); cv.height=Math.round(H*DPR);
+    ctx.setTransform(DPR,0,0,DPR,0,0); layout();
+  }
+
+  function bg(){
+    ctx.fillStyle='#FFFFFF'; ctx.fillRect(0,0,W,H);
+    var g=ctx.createRadialGradient(W*0.16,H*0.5,0,W*0.16,H*0.5,W*0.32);
+    g.addColorStop(0,'rgba(168,112,66,.045)'); g.addColorStop(1,'rgba(168,112,66,0)');
+    ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+    var g2=ctx.createRadialGradient(readX,H*0.5,0,readX,H*0.5,W*0.22);
+    g2.addColorStop(0,'rgba(21,115,90,.075)'); g2.addColorStop(1,'rgba(21,115,90,0)');
+    ctx.fillStyle=g2; ctx.fillRect(0,0,W,H);
+  }
+
+  function slotState(i,t){
+    var raw=t*SPEED + i/SLOTS;
+    var u=raw-Math.floor(raw);
+    var lap=Math.floor(raw);
+    var def=DOCS[DOC_SET[((i+lap*SLOTS)%DOC_SET.length+DOC_SET.length)%DOC_SET.length]];
+    var seed=i*31+lap*7;
+    var x0=-W*0.12, xE=x0+(readX-x0)/UP;
+    return {
+      def:def, u:u,
+      s:0.74+0.34*u,
+      a:Math.min(clamp01(u/0.09), 1-clamp01((u-UP)/0.10)),
+      x:lerp(x0,xE,u),
+      y:H*0.5+(hash(seed,2)-0.5)*H*0.10*(1-u*0.7)+Math.sin(t*0.4+i)*2.5,
+      rot:(hash(seed,3)-0.5)*0.30*clamp01(1-u/UP),
+      scan:clamp01((u-0.34)/(UP-0.34))
+    };
+  }
+
+  function drawDoc(st){
+    if(st.a<=0.012) return;
+    var def=st.def;
+    var base=(def.lw>def.lh) ? H*0.42 : H*0.62;
+    var k=(base/def.lh)*st.s;
+    var align=clamp01(st.u/UP);
+
+    ctx.save();
+    ctx.globalAlpha=st.a;
+    ctx.translate(st.x,st.y);
+    ctx.rotate(st.rot + def.skew*(1-align));
+    ctx.transform(0.90+0.10*align, 0.06*(1-align), 0, 1, 0, 0);
+    ctx.scale(k,k);
+    ctx.translate(-def.lw/2,-def.lh/2);
+
+    ctx.save();
+    ctx.shadowColor='rgba(38,32,24,.18)'; ctx.shadowBlur=26/k; ctx.shadowOffsetY=14/k;
+    ctx.fillStyle=def.tint; ctx.fillRect(0,0,def.lw,def.lh);
+    ctx.restore();
+    ctx.save();
+    ctx.shadowColor='rgba(38,32,24,.16)'; ctx.shadowBlur=4/k; ctx.shadowOffsetY=2/k;
+    ctx.fillStyle=def.tint; ctx.fillRect(0,0,def.lw,def.lh);
+    ctx.restore();
+
+    ctx.save();
+    ctx.beginPath(); ctx.rect(0,0,def.lw,def.lh); ctx.clip();
+    PAINT[def.type](ctx,def);
+    ctx.restore();
+
+    ctx.strokeStyle='rgba(28,27,25,.14)'; ctx.lineWidth=0.7;
+    ctx.strokeRect(0.35,0.35,def.lw-0.7,def.lh-0.7);
+
+    var fl=fieldsOf(def);
+    for(var i=0;i<fl.length;i++){
+      var f=fl[i], pop=clamp01((st.scan-(f.y+f.h)/def.lh)/0.07);
+      if(pop<=0) continue;
+      var g=lerp(1.07,1,pop);
+      ctx.save();
+      ctx.translate(f.x+f.w/2,f.y+f.h/2); ctx.scale(g,g);
+      rr(ctx,-f.w/2,-f.h/2,f.w,f.h,1.6);
+      ctx.fillStyle='rgba(21,115,90,'+(0.055*pop).toFixed(3)+')'; ctx.fill();
+      ctx.strokeStyle='rgba(21,115,90,'+(0.62*pop).toFixed(3)+')'; ctx.lineWidth=0.7; ctx.stroke();
+      ctx.beginPath(); ctx.arc(-f.w/2,-f.h/2,1.5,0,6.2832);
+      ctx.fillStyle='rgba(21,115,90,'+(0.8*pop).toFixed(3)+')'; ctx.fill();
+      ctx.restore();
+    }
+
+    if(st.scan>0 && st.scan<1){
+      var sy=st.scan*def.lh;
+      var lg=ctx.createLinearGradient(0,sy-13,0,sy+5);
+      lg.addColorStop(0,'rgba(21,115,90,0)'); lg.addColorStop(1,'rgba(21,115,90,.16)');
+      ctx.fillStyle=lg; ctx.fillRect(0,sy-13,def.lw,18);
+      ctx.fillStyle='rgba(21,115,90,.85)'; ctx.fillRect(0,sy-0.5,def.lw,1);
+    }
+    ctx.restore();
+  }
+
+  function drawFeed(t,quad){
+    ctx.save(); ctx.setLineDash([2.5,8]); ctx.lineWidth=1;
+    for(var u=0;u<4;u++){
+      var sy=lerp(H*0.34,H*0.66,(u+0.5)/4);
+      var ty=lerp(quad.cy-quad.hL*0.55,quad.cy+quad.hL*0.6,(u+0.5)/4);
+      ctx.lineDashOffset=-(t*78+u*6);
+      ctx.strokeStyle='rgba(21,115,90,.30)';
+      ctx.beginPath(); ctx.moveTo(readX+8,sy);
+      ctx.bezierCurveTo(readX+W*0.06,sy,quad.xL-W*0.05,ty,quad.xL-2,ty);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function renderPanel(t,dtSlot){
+    oc.setTransform(SS,0,0,SS,0,0); oc.clearRect(0,0,pw,ph);
+    rr(oc,0.5,0.5,pw-1,ph-1,9); oc.fillStyle='#fff'; oc.fill();
+    oc.strokeStyle='rgba(28,27,25,.14)'; oc.lineWidth=1; oc.stroke();
+    oc.fillStyle='rgba(21,115,90,.40)'; rr(oc,pad,pad-1,pw*0.19,6,3); oc.fill();
+    oc.fillStyle='rgba(28,27,25,.13)'; rr(oc,pad+pw*0.23,pad-1,pw*0.13,6,3); oc.fill();
+    var bl=0.5+0.5*Math.sin(t*3.4);
+    oc.beginPath(); oc.arc(pw-pad-4,pad+2,3.2,0,6.2832);
+    oc.fillStyle='rgba(21,115,90,'+(0.4+0.5*bl).toFixed(3)+')'; oc.fill();
+
+    oc.save(); rr(oc,1,cTop-2,pw-2,cBot-cTop+4,6); oc.clip();
+    var u=t*LPS, kNow=Math.floor(u);
+    oc.textAlign='center'; oc.textBaseline='middle';
+    for(var k=kNow;k>=kNow-visible-1;k--){
+      var y=wY-(u-k)*LH;
+      if(y<cTop-LH||y>cBot+LH) continue;
+      var a=clamp01((y-cTop)/(LH*1.6));
+      var filled=clamp01((t-k/LPS)*LPS);
+      oc.fillStyle='rgba(28,27,25,'+(0.11*a).toFixed(3)+')';
+      rr(oc,lblX,y-3.2,lblW,6.4,3.2); oc.fill();
+      oc.fillStyle='rgba(21,115,90,'+((0.20+0.55*filled)*a).toFixed(3)+')';
+      rr(oc,lblX,y-3.2,Math.max(0.001,lblW*Math.min(1,filled*1.1)),6.4,3.2); oc.fill();
+      oc.font=fs.toFixed(1)+'px '+MONO;
+      for(var c=0;c<cols;c++){
+        var n=k*cols+c, arr=n*dtSlot;
+        if(arr>t) continue;
+        var fr=clamp01((t-arr)/0.5);
+        oc.fillStyle='rgba('+(lerp(OUT_R,INK_R,fr)|0)+','+(lerp(OUT_G,INK_G,fr)|0)+','
+                    +(lerp(OUT_B,INK_B,fr)|0)+','+(0.9*a).toFixed(3)+')';
+        oc.fillText(OUT.charAt(Math.floor(hash(n,9)*OUT.length)),sX[c],y);
+      }
+    }
+    var nCur=Math.floor(t/dtSlot), cc=nCur-Math.floor(nCur/cols)*cols;
+    var cx=sX[cc]+(sX[1]-sX[0])*0.5, cy=wY-(u-Math.floor(nCur/cols))*LH;
+    oc.fillStyle='rgba(21,115,90,'+(0.35+0.5*Math.abs(Math.sin(t*8))).toFixed(3)+')';
+    oc.fillRect(cx-0.9,cy-fs*0.55,1.8,fs*1.1);
+    var railY=cBot-1, rx0=sX[0]-(sX[1]-sX[0])*0.6, rx1=sX[cols-1]+(sX[1]-sX[0])*0.6;
+    oc.fillStyle='rgba(28,27,25,.10)'; oc.fillRect(rx0,railY,rx1-rx0,1);
+    var hg=oc.createLinearGradient(cx-34,0,cx+34,0);
+    hg.addColorStop(0,'rgba(21,115,90,0)'); hg.addColorStop(.5,'rgba(21,115,90,.78)');
+    hg.addColorStop(1,'rgba(21,115,90,0)');
+    oc.fillStyle=hg; oc.fillRect(cx-34,railY-0.5,68,2);
+    var fg=oc.createLinearGradient(0,cTop-2,0,cTop+LH*1.8);
+    fg.addColorStop(0,'rgba(255,255,255,1)'); fg.addColorStop(1,'rgba(255,255,255,0)');
+    oc.fillStyle=fg; oc.fillRect(0,cTop-2,pw,LH*1.8);
+    oc.restore();
+  }
+
+  function panelQuad(t){
+    var zL=-0.30+0.05*Math.sin(t*0.15), zR=0.20+0.05*Math.sin(t*0.15);
+    var sL=FOV/(FOV-zL), sR=FOV/(FOV-zR), norm=2/(sL+sR);
+    return {xL:panel.x,xR:panel.x+pw,cy:panel.y+ph/2+3*Math.sin(t*0.22),
+            hL:(ph/2)*sL*norm,hR:(ph/2)*sR*norm,sL:sL,sR:sR};
+  }
+  function blitPanel(q){
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(q.xL,q.cy-q.hL); ctx.lineTo(q.xR,q.cy-q.hR);
+    ctx.lineTo(q.xR,q.cy+q.hR); ctx.lineTo(q.xL,q.cy+q.hL); ctx.closePath();
+    ctx.shadowColor='rgba(40,34,26,.20)'; ctx.shadowBlur=30; ctx.shadowOffsetY=12;
+    ctx.fillStyle='#fff'; ctx.fill(); ctx.restore();
+    var destW=q.xR-q.xL, STEP=3;
+    for(var px=0;px<destW;px+=STEP){
+      var p0=px/destW, p1=Math.min(1,(px+STEP)/destW);
+      var u0=(p0*q.sR)/((1-p0)*q.sL+p0*q.sR);
+      var u1=(p1*q.sR)/((1-p1)*q.sL+p1*q.sR);
+      var hh=lerp(q.hL,q.hR,(u0+u1)/2);
+      var sx0=u0*off.width, sx1=u1*off.width;
+      if(sx1-sx0<0.1) continue;
+      ctx.drawImage(off,sx0,0,sx1-sx0,off.height,q.xL+px,q.cy-hh,(p1-p0)*destW+0.6,hh*2);
+    }
+  }
+
+  function frame(now){
+    var t=(reduce?18:now/1000+18), dtSlot=1/(LPS*cols);
+    var q=panelQuad(t);
+    bg();
+    drawFeed(t,q);
+    var list=[];
+    for(var i=0;i<SLOTS;i++) list.push(slotState(i,t));
+    list.sort(function(a,b){return a.s-b.s;}).forEach(drawDoc);
+    renderPanel(t,dtSlot);
+    blitPanel(q);
+    if(!reduce) requestAnimationFrame(frame);
+  }
+
+  addEventListener('resize',resize);
+  resize();
+  if(document.fonts&&document.fonts.ready) document.fonts.ready.then(resize);
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
