@@ -15,9 +15,13 @@ Tre zoner som visar ett flöde från vänster till höger:
    är avsiktligt abstrakt; bara formatbadgen namnger dokumentet.
 2. **Mitten** – insamlingsboxen. Pulserande streck bär värden dit från varje
    dokument, och en fyllnadsfront vandrar nedåt i boxen.
-3. **Höger** – en e-handelsvy som långsamt scrollar. Ett kort som kommer in
-   underifrån är tomt; på vägen upp fylls bild, titel, underrubrik och pris i,
-   så att kortet är komplett när det lämnar vyn.
+3. **Höger** – en e-handelsvy som långsamt scrollar, kolumn för kolumn i olika
+   takt. Produktbilden ligger på plats direkt (enkla streckfigurer: cykel,
+   tröja, sko, elscooter, hörlurar, stol, lampa, borrmaskin, ryggsäck,
+   kaffebryggare). Alla textfält – kategori, artikelnamn, variant, betyg, pris,
+   jämförpris, lagerstatus och köpknapp – är tomma när kortet kommer in
+   underifrån och skrivs ut ett i taget på vägen upp, så att kortet är komplett
+   när det lämnar vyn.
 
 Reglage längst upp i skriptet i `index.html`:
 
@@ -31,6 +35,23 @@ Tröskelvärdena i `drawShop` (`fld(..., p, tröskel, ...)`) styr i vilken ordni
 fälten populeras när kortet scrollar uppåt.
 
 `prefers-reduced-motion` ger en stillbild i stället för animation.
+
+## Pilotanmälan ("Håll mig informerad")
+
+Bannern överst öppnar en dialogruta med mejladress (obligatorisk) och ett
+fritextfält. Formuläret är ett **Netlify-formulär** (`name="pilot"`,
+`data-netlify="true"`) som postas med fetch, så rutan kan visa ett tack utan
+att sidan laddas om. Faller anropet returneras ett felmeddelande med en
+mailto-länk till kontakt@custom46.com, så ingen anmälan går förlorad.
+
+**Ett manuellt steg krävs efter första deployen:** i Netlify, under
+*Forms → pilot → Settings → Form notifications*, lägg till en
+*Email notification* till **kontakt@custom46.com**. Utan den sparas
+anmälningarna bara i Netlifys panel och inget mejl skickas. Steget går inte att
+göra från koden.
+
+Lokalt (`python -m http.server`) svarar servern 501 på POST — då visas
+felmeddelandet. Det är väntat och säger inget om hur det fungerar i drift.
 
 ## Tidigare versioner
 
