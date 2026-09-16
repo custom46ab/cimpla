@@ -212,6 +212,7 @@
   // ---------- smaverktyg ----------
   var SANS='"IBM Plex Sans",system-ui,sans-serif';
   var MONO='"IBM Plex Mono",ui-monospace,Menlo,monospace';
+  var SERIF='"Instrument Serif",Georgia,serif';
   function lerp(a,b,t){return a+(b-a)*t;}
   function clamp01(t){return t<0?0:t>1?1:t;}
   function easeOut(t){return 1-Math.pow(1-t,3);}
@@ -522,7 +523,7 @@
     docSX = VW*0.080*(1-sq);   // hur brett dokumenten sprids i sidled
     docSY = H*0.24;            // ... och i hojdled
     var bw=VW*0.095, bh=H*0.30;
-    box={w:bw,h:bh,x:pull(VW*0.415)-bw/2,y:(H-bh)/2};
+    box={w:bw,h:bh,x:pull(VW*0.457)-bw/2,y:(H-bh)/2};
     var brw=VW*0.400, brh=H*0.84;
     br={x:pull(VW-brw/2-VW*0.012)-brw/2, y:(H-brh)/2, w:brw, h:brh,
         chrome:Math.max(15,brh*0.062)};
@@ -650,13 +651,20 @@
     rr(ctx,box.x+0.5,box.y+0.5,box.w-1,box.h-1,9);
     ctx.strokeStyle=ink(.14); ctx.lineWidth=1; ctx.stroke();
 
-    var pad=Math.max(7,box.w*0.11), x=box.x+pad, w=box.w-pad*2;
-    bar(ctx,x,box.y+pad,w*0.52,5,g('.45'));
-    var bl=0.5+0.5*Math.sin(t*3.2);
-    ctx.beginPath(); ctx.arc(box.x+box.w-pad-2,box.y+pad+2.5,2.8,0,6.2832);
-    ctx.fillStyle=g((0.35+0.5*bl).toFixed(3)); ctx.fill();
+    // rubrik: ordmarket, sa att det framgar att boxen ar cimpla
+    var pad=Math.max(6,box.w*0.09), x=box.x+pad, w=box.w-pad*2;
+    ctx.font='400 10px '+SERIF;
+    var u10=ctx.measureText('cimpla').width||26;
+    var fs=Math.min(box.h*0.13,(w-box.w*0.06)/u10*10);
+    var puls=0.5+0.5*Math.sin(t*2.2);
+    var base=box.y+pad+fs*0.84;
+    T(ctx,'cimpla',x,base,fs,'400',ink((0.72+0.24*puls).toFixed(3)),'left',SERIF);
+    var dr=Math.max(1.3,fs*0.10);
+    ctx.beginPath(); ctx.arc(x+ctx.measureText('cimpla').width+dr*1.7,base,dr,0,6.2832);
+    ctx.fillStyle=g((0.45+0.55*puls).toFixed(3)); ctx.fill();
+    ctx.fillStyle=ink(.10); ctx.fillRect(x,box.y+pad+fs*1.32,w,0.8);
 
-    var top=box.y+pad+14, bot=box.y+box.h-pad-9, rows=Math.max(4,Math.floor((bot-top)/11));
+    var top=box.y+pad+fs*1.32+8, bot=box.y+box.h-pad-9, rows=Math.max(3,Math.floor((bot-top)/11));
     var rh=(bot-top)/rows;
     ctx.save();
     rr(ctx,box.x+1,top-3,box.w-2,bot-top+8,6); ctx.clip();
