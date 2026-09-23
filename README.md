@@ -45,11 +45,13 @@ fritextfält. Formuläret är ett **Netlify-formulär** (`name="pilot"`,
 att sidan laddas om. Faller anropet returneras ett felmeddelande med en
 mailto-länk till kontakt@custom46.com, så ingen anmälan går förlorad.
 
-**Ett manuellt steg krävs efter första deployen:** i Netlify, under
-*Forms → pilot → Settings → Form notifications*, lägg till en
-*Email notification* till **kontakt@custom46.com**. Utan den sparas
-anmälningarna bara i Netlifys panel och inget mejl skickas. Steget går inte att
-göra från koden.
+> ⚠️ **TRASIGT efter flytten till Cloudflare (2026-09-23).** Netlify Forms
+> fungerar bara på Netlify. Formuläret postar `fetch('/')` som Netlify
+> fångade — Cloudflare gör det inte, så pilotanmälningar tas **inte** emot
+> någonstans just nu. Felfallet (mailto till kontakt@custom46.com) visas dock
+> fortfarande. Måste ersättas med ett Cloudflare-kompatibelt upplägg: en Pages
+> Function som mejlar via Graph, eller en formtjänst (t.ex. Formspree). Beslut
+> ej fattat.
 
 Lokalt (`python -m http.server`) svarar servern 501 på POST — då visas
 felmeddelandet. Det är väntat och säger inget om hur det fungerar i drift.
@@ -67,4 +69,10 @@ fristående sida — öppna den direkt för att jämföra, eller kopiera tillbak
 
 ## Deploy
 
-Netlify, publish directory = repots rot. Inget byggkommando behövs.
+Cloudflare Pages, kopplat till detta repo (`custom46ab/cimpla`, gren `master`).
+Framework preset **None**, inget byggkommando, output = repots rot. Push till
+master auto-deployar. Custom domains: `cimpla.se` + `www.cimpla.se`.
+
+Flyttad från Netlify 2026-09-23 (Netlifys kreditmodell gjorde ~20 deployer/mån
+till taket; Cloudflare ger 500). Netlify-projektet finns kvar men med byggen
+**stoppade**.

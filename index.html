@@ -6,7 +6,7 @@
 <title>cimpla</title>
 <meta name="description" content="cimpla automatiserar informationsflödet, från leverantör till ert affärssystem. Del av custom46 AB.">
 <link rel="canonical" href="https://cimpla.se/">
-<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="symbol.svg" type="image/svg+xml">
 <meta name="theme-color" content="#15735A">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="cimpla">
@@ -30,12 +30,8 @@
     font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
     -webkit-font-smoothing:antialiased}
   .wrap{max-width:1180px;margin:0 auto;padding:0 24px}
-  nav{display:flex;align-items:baseline;gap:10px;padding:26px 0;font-size:14px}
-  nav .dot{display:inline-block;width:6px;height:6px;border-radius:50%;
-    background:currentColor;margin-left:3px;vertical-align:baseline}
-  nav .name{font-family:"Instrument Serif",Georgia,serif;font-weight:400;
-    font-size:38px;letter-spacing:-.005em;line-height:1;
-    white-space:nowrap}   /* punkten far aldrig hamna pa egen rad */
+  nav{display:flex;align-items:center;gap:10px;padding:26px 0;font-size:14px}
+  nav .logo{display:block;height:34px;width:auto}
   .band{position:relative;width:100%;height:clamp(340px,50vh,540px)}
   canvas{display:block;width:100%;height:100%}
   .copy{padding:40px 0 64px;max-width:900px}
@@ -96,7 +92,7 @@
 </div>
 
 <div class="wrap">
-  <nav><span class="name">cimpla<span class="dot"></span></span></nav>
+  <nav><img class="logo" src="logo.svg" alt="cimpla" width="133" height="34"></nav>
   <div class="band"><canvas id="hero"></canvas></div>
   <div class="copy">
     <h1>Automatisera <em>informationsflödet</em>, från leverantör till ert affärssystem.</h1>
@@ -637,7 +633,27 @@
   }
 
   // ---------- mitten: insamlingsboxen ----------
+  // cimpla-symbolen: prickrutnat som gar fran utspritt/blekt (vanster) till
+  // samlat gront (hoger) - samma metafor som hela floodet. Koordinaterna ar
+  // hamtade rakt ur symbol.svg (viewBox 0 -0.50781 0.47493 0.50781 efter /1000).
+  var SYMD=[
+    0.01803,-0.48978,0.01803, 0.18280,-0.44704,0.02357, 0.30215,-0.41479,0.02911, 0.44029,-0.41144,0.03464,
+    0.12249,-0.34295,0.01803, 0.19731,-0.31110,0.02357, 0.30577,-0.30146,0.02911, 0.44029,-0.28805,0.03464,
+    0.13507,-0.10413,0.01803, 0.22453,-0.19631,0.02357, 0.31044,-0.16035,0.02911, 0.44029,-0.16467,0.03464,
+    0.14517,-0.12287,0.01803, 0.20445,-0.02357,0.02357, 0.31711,-0.05226,0.02911, 0.44029,-0.04129,0.03464
+  ];
+  var SYMC=[[74,107,98,0.22],[56,109,95,0.48],[38,112,92,0.74],[21,115,90,1.0]];
+  function drawSymbol(x0,y0,S,ga){
+    for(var i=0;i<16;i++){
+      var nx=SYMD[i*3], ny=SYMD[i*3+1], nr=SYMD[i*3+2], c=SYMC[i%4];
+      var px=x0+nx/0.47493*S, py=y0+(ny+0.50781)/0.50781*S, r=nr/0.50781*S;
+      ctx.beginPath(); ctx.arc(px,py,r,0,6.2832);
+      ctx.fillStyle='rgba('+c[0]+','+c[1]+','+c[2]+','+(c[3]*ga).toFixed(3)+')'; ctx.fill();
+    }
+  }
+
   function drawBox(t){
+    if(box.w<20||box.h<12) return;   // innan canvasen fatt storlek: rita inget
     ctx.save();
     ctx.shadowColor='rgba(40,34,26,.16)'; ctx.shadowBlur=24; ctx.shadowOffsetY=10;
     rr(ctx,box.x,box.y,box.w,box.h,9); ctx.fillStyle='#FFFFFF'; ctx.fill();
@@ -645,22 +661,27 @@
     rr(ctx,box.x+0.5,box.y+0.5,box.w-1,box.h-1,9);
     ctx.strokeStyle=ink(.14); ctx.lineWidth=1; ctx.stroke();
 
-    // I boxen star bara ordmarket, pulserande. Satt som loggan: punkten i
-    // samma farg som texten, inte gron, och vilande PA baslinjen.
-    var pad=Math.max(6,box.w*0.10), w=box.w-pad*2;
+    // I boxen star hela loggan: symbolen + ordmarket, pulserande. Punkten i
+    // samma farg som texten (inte gron), vilande PA baslinjen - satt som loggan.
+    var pad=Math.max(6,box.w*0.09), avail=box.w-pad*2;
     ctx.font='400 10px '+SERIF;
-    var u10=ctx.measureText('cimpla').width||26;
-    var fs=Math.min(box.h*0.42,w/u10*10*0.86);
+    var u10=ctx.measureText('cimpla').width||26, ur=u10/10;
+    var gap=0.34, symW=0.935, dotSp=0.289;                 // i enheter av fs
+    var fs=Math.min(box.h*0.46, avail/(symW+gap+ur+dotSp));
     var puls=0.5+0.5*Math.sin(t*2.0);
     var dr=Math.max(1.2,fs*0.085);
     ctx.font='400 '+fs.toFixed(2)+'px '+SERIF;
-    var tw=ctx.measureText('cimpla').width, total=tw+dr*3.4;
-    var tx=box.x+(box.w-total)/2, by=box.y+box.h/2+fs*0.34;
+    var tw=ctx.measureText('cimpla').width;
+    var total=fs*symW+fs*gap+tw+dr*3.4;
+    var startX=box.x+(box.w-total)/2, cy=box.y+box.h/2;
+    var by=cy+fs*0.34;
     var a=0.26+0.74*puls, sc=0.975+0.05*puls;
     ctx.save();
-    ctx.translate(box.x+box.w/2,box.y+box.h/2);
+    ctx.translate(box.x+box.w/2,cy);
     ctx.scale(sc,sc);
-    ctx.translate(-(box.x+box.w/2),-(box.y+box.h/2));
+    ctx.translate(-(box.x+box.w/2),-cy);
+    drawSymbol(startX, cy-fs/2, fs, a);
+    var tx=startX+fs*symW+fs*gap;
     T(ctx,'cimpla',tx,by,fs,'400',ink(a.toFixed(3)),'left',SERIF);
     ctx.beginPath(); ctx.arc(tx+tw+dr*1.7,by-dr*0.95,dr,0,6.2832);
     ctx.fillStyle=ink(a.toFixed(3)); ctx.fill();
