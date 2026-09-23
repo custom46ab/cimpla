@@ -70,3 +70,4 @@ fristående sida — öppna den direkt för att jämföra, eller kopiera tillbak
 Netlify, publish directory = repots rot. Inget byggkommando behövs.
 
 <!-- deploy-test 2026-09-23: verifierar Cloudflare Pages auto-deploy -->
+<!-- webhook-test 2 -->
