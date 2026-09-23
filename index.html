@@ -110,8 +110,7 @@
     <h2 id="signupTitle">Håll mig informerad</h2>
     <p class="lede">Lämna din mejladress så hör vi av oss när cimpla öppnar för fler kunder.</p>
 
-    <form id="signupForm" name="pilot" method="POST" data-netlify="true" netlify-honeypot="bot-field">
-      <input type="hidden" name="form-name" value="pilot">
+    <form id="signupForm" name="pilot" method="POST" action="/pilot">
       <p class="hp"><label>Lämna tomt <input name="bot-field" tabindex="-1" autocomplete="off"></label></p>
 
       <div class="field">
@@ -169,7 +168,7 @@
     if(!form.reportValidity()) return;      // webblasarens egen validering styr
     ev.preventDefault();
     err.hidden=true; send.disabled=true; send.textContent='Skickar…';
-    fetch('/',{
+    fetch('/pilot',{
       method:'POST',
       headers:{'Content-Type':'application/x-www-form-urlencoded'},
       body:new URLSearchParams(new FormData(form)).toString()
