@@ -2,7 +2,8 @@
 
 Statisk webbplats för cimpla, en produkt under custom46 AB. Ingen byggkedja.
 Typsnitten är självhostade i `fonts/` — sidorna gör inga externa anrop
-(utom länkarna till bokningssidan i Microsoft Bookings och kundportalen).
+(utom länken till bokningssidan i Microsoft Bookings). Länken till kundportalen
+ligger bortkommenterad i sidfoten på varje sida — ta bort kommentaren när den ska visas.
 
 ## Struktur (sedan 2026-10-12)
 
