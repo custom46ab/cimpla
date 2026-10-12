@@ -1,10 +1,32 @@
 # cimpla.se
 
-Statisk landningssida för cimpla, en produkt under custom46 AB.
+Statisk webbplats för cimpla, en produkt under custom46 AB. Ingen byggkedja.
+Typsnitten är självhostade i `fonts/` — sidorna gör inga externa anrop
+(utom länkarna till bokningssidan i Microsoft Bookings och kundportalen).
 
-En enda sida, ingen byggkedja. `index.html` innehåller allt: markup, CSS och
-canvas-animationen i headern. Typsnitten är självhostade i `fonts/` — sidan gör
-inga externa anrop alls.
+## Struktur (sedan 2026-10-12)
+
+| Fil | Innehåll |
+|---|---|
+| `index.html` | Start: heroanimationen, värdet, tre steg, resultat från första piloten |
+| `produkt/index.html` | Produkten: flödet in → cimpla → ut, fälten, hur modellen arbetar, CleverApps, data och säkerhet |
+| `kom-igang/index.html` | Kom igång: fyra steg, vad vi behöver, vanliga frågor |
+| `kontakt/index.html` | Boka intromöte, mejl, kontaktformulär |
+| `404.html` | Cloudflare Pages visar den för okända adresser |
+| `styles.css` | All CSS, gemensam för sidorna |
+| `site.js` | Mobilmeny, sidhuvudets linje, intresseanmälan (dialogen) och kontaktformuläret |
+| `hero.js` | Canvasanimationen på startsidan |
+| `sitemap.xml`, `robots.txt` | För sökmotorer — lägg till nya sidor i sitemap |
+
+**Sidhuvud, sidfot och dialogen är kopierade i varje sida.** Ändras menyn,
+bokningslänken eller kontaktadressen (info@cimpla.se) måste alla fem filerna
+ändras. Mappar med `index.html` ger rena adresser (`/produkt/`) både lokalt och
+på Cloudflare.
+
+**Cache:** `styles.css`, `site.js` och `hero.js` laddas med `?v=ÅÅÅÅMMDD`. Zonen
+cimpla.se har en Browser Cache TTL på 4 h som skriver över `_headers` (samma
+problem som portalen) — **byt värdet i alla sidor när någon av filerna ändras**,
+annars ser besökare den gamla versionen i upp till fyra timmar.
 
 ## Animationen
 
@@ -37,21 +59,14 @@ fälten populeras när kortet scrollar uppåt.
 
 `prefers-reduced-motion` ger en stillbild i stället för animation.
 
-## Pilotanmälan ("Håll mig informerad")
+## Formulären (intresseanmälan och kontakt)
 
-Bannern överst öppnar en dialogruta med mejladress (obligatorisk) och ett
-fritextfält. Formuläret är ett **Netlify-formulär** (`name="pilot"`,
-`data-netlify="true"`) som postas med fetch, så rutan kan visa ett tack utan
-att sidan laddas om. Faller anropet returneras ett felmeddelande med en
-mailto-länk till kontakt@custom46.com, så ingen anmälan går förlorad.
-
-> ⚠️ **TRASIGT efter flytten till Cloudflare (2026-09-23).** Netlify Forms
-> fungerar bara på Netlify. Formuläret postar `fetch('/')` som Netlify
-> fångade — Cloudflare gör det inte, så pilotanmälningar tas **inte** emot
-> någonstans just nu. Felfallet (mailto till kontakt@custom46.com) visas dock
-> fortfarande. Måste ersättas med ett Cloudflare-kompatibelt upplägg: en Pages
-> Function som mejlar via Graph, eller en formtjänst (t.ex. Formspree). Beslut
-> ej fattat.
+Bannern överst öppnar en dialogruta (mejl + fritext), och kontaktsidan har ett
+formulär (namn, företag, mejl, meddelande). Båda postas med fetch till
+`/pilot` = Cloudflare Pages Function `functions/pilot.js`, som mejlar via
+Microsoft Graph till `NOTIFY_TO` (miljövariabler i Cloudflare). Det dolda fältet
+`amne` (`intresse`/`kontakt`) styr mejlets ämnesrad. Faller anropet visas ett
+felmeddelande med en mailto-länk till info@cimpla.se, så inget går förlorat.
 
 Lokalt (`python -m http.server`) svarar servern 501 på POST — då visas
 felmeddelandet. Det är väntat och säger inget om hur det fungerar i drift.

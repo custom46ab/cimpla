@@ -3,855 +3,233 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>cimpla</title>
-<meta name="description" content="cimpla automatiserar informationsflödet, från leverantör till ert affärssystem. Del av custom46 AB.">
+<title>cimpla – automatiserad orderinläsning för handlare</title>
+<meta name="description" content="cimpla läser in orderbekräftelser och leverantörers prislistor och gör dem till färdiga importfiler för ert affärssystem. Tränad på er egen produktdata.">
 <link rel="canonical" href="https://cimpla.se/">
-<link rel="icon" href="symbol.svg" type="image/svg+xml">
+<link rel="icon" href="/symbol.svg" type="image/svg+xml">
 <meta name="theme-color" content="#15735A">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="cimpla">
-<meta property="og:title" content="cimpla">
-<meta property="og:description" content="Automatisera informationsflödet, från leverantör till ert affärssystem.">
+<meta property="og:locale" content="sv_SE">
+<meta property="og:title" content="cimpla – automatiserad orderinläsning för handlare">
+<meta property="og:description" content="cimpla läser in orderbekräftelser och leverantörers prislistor och gör dem till färdiga importfiler för ert affärssystem. Tränad på er egen produktdata.">
 <meta property="og:url" content="https://cimpla.se/">
 <meta property="og:image" content="https://cimpla.se/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="fonts.css">
-<script>
-  // en omladdning ska borja hogst upp, inte dar man rakade sta
-  if('scrollRestoration' in history) history.scrollRestoration='manual';
-  addEventListener('load',function(){ scrollTo(0,0); });
-</script>
-<style>
-  :root{ --ink:#1C1B19; --muted:#6B665E; --green:#15735A; }
-  *{box-sizing:border-box}
-  body{margin:0;background:#fff;color:var(--ink);
-    font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
-    -webkit-font-smoothing:antialiased}
-  .wrap{max-width:1180px;margin:0 auto;padding:0 24px}
-  nav{display:flex;align-items:center;gap:10px;padding:26px 0;font-size:14px}
-  nav .logo{display:block;height:34px;width:auto}
-  .band{position:relative;width:100%;height:clamp(340px,50vh,540px)}
-  canvas{display:block;width:100%;height:100%}
-  .copy{padding:40px 0 64px;max-width:900px}
-  footer{display:flex;flex-wrap:wrap;gap:12px 16px;align-items:baseline;
-    border-top:1px solid rgba(28,27,25,.10);padding:22px 0 44px;
-    font-size:13px;color:var(--muted)}
-  footer a{color:var(--muted);text-decoration:none;margin-left:auto}
-  footer a:hover{color:var(--ink)}
-  h1{font-family:"Instrument Serif",Georgia,serif;font-weight:400;
-    font-size:clamp(29px,4.3vw,47px);line-height:1.08;letter-spacing:-.012em;margin:0 0 22px}
-  h1 em{font-style:italic;color:var(--green)}
-  p{margin:0;color:var(--muted);font-size:15.3px;line-height:1.65;max-width:560px}
-
-  /* pilotbanner */
-  .banner{background:rgba(21,115,90,.055);border-bottom:1px solid rgba(21,115,90,.13)}
-  .banner-in{display:flex;align-items:center;gap:9px 14px;flex-wrap:wrap;
-    padding-top:10.5px;padding-bottom:7px;font-size:13.5px;color:var(--muted)}
-  .ghost{margin-left:auto;font:inherit;font-size:13px;line-height:1;cursor:pointer;
-    border:1px solid rgba(21,115,90,.32);background:#fff;color:var(--green);
-    padding:6px 13px;border-radius:999px;transition:background .15s,color .15s}
-  .ghost:hover{background:var(--green);color:#fff;border-color:var(--green)}
-
-  /* dialogruta */
-  dialog{border:none;padding:0;border-radius:13px;color:var(--ink);
-    width:min(430px,calc(100% - 32px));box-shadow:0 26px 70px rgba(40,34,26,.26)}
-  dialog::backdrop{background:rgba(28,27,25,.40)}
-  .modal{padding:28px}
-  .modal h2{font-family:"Instrument Serif",Georgia,serif;font-weight:400;
-    font-size:28px;line-height:1.15;margin:0 0 8px}
-  .lede{font-size:14.5px;margin:0 0 20px}
-  .field{margin:0 0 15px}
-  .field label{display:block;font-size:13px;color:var(--muted);margin:0 0 6px}
-  .field input,.field textarea{width:100%;font:inherit;font-size:15px;color:var(--ink);
-    background:#fff;border:1px solid rgba(28,27,25,.20);border-radius:8px;padding:10px 12px}
-  .field textarea{resize:vertical;min-height:86px}
-  .field input:focus,.field textarea:focus{outline:none;border-color:var(--green);
-    box-shadow:0 0 0 3px rgba(21,115,90,.13)}
-  .actions{display:flex;align-items:center;gap:14px;margin-top:2px}
-  .send{font:inherit;font-size:14.5px;line-height:1;cursor:pointer;border:none;
-    background:var(--green);color:#fff;border-radius:999px;padding:12px 22px}
-  .send[disabled]{opacity:.55;cursor:default}
-  .cancel{font:inherit;font-size:14px;background:none;border:none;color:var(--muted);
-    cursor:pointer;padding:6px}
-  .cancel:hover{color:var(--ink)}
-  .note{font-size:13px;line-height:1.55;color:var(--muted);margin:14px 0 0}
-  .note a{color:var(--green)}
-  .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
-  [hidden]{display:none !important}
-</style>
+<link rel="preload" href="/fonts/InstrumentSerif-400-normal-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/IBMPlexSans-400-normal-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/fonts.css">
+<link rel="stylesheet" href="/styles.css?v=20261012b">
 </head>
 <body>
+<a class="skip" href="#main">Hoppa till innehållet</a>
 
-<div class="banner">
-  <div class="wrap banner-in">
-    <span>Just nu med utvalda pilotkunder — lanseras snart.</span>
-    <button type="button" class="ghost" data-open>Håll mig informerad</button>
+<header class="site-head">
+  <div class="banner">
+    <div class="wrap banner-in">
+      <span>Just nu med utvalda pilotkunder<span class="banner-long"> — lanseras snart</span>.</span>
+      <button type="button" class="ghost" data-open><span class="bl">Håll mig informerad</span><span class="bs">Anmäl intresse</span></button>
+    </div>
   </div>
-</div>
+  <div class="wrap head-in">
+    <a class="brand" href="/" aria-label="cimpla – till startsidan"><img src="/logo.svg" alt="cimpla" width="126" height="32"></a>
+    <button type="button" class="menu-toggle" aria-expanded="false" aria-controls="nav-panel" aria-label="Öppna meny">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+    <nav id="nav-panel" class="nav-panel" aria-label="Huvudmeny">
+      <ul class="menu">
+        <li><a href="/produkt/">Produkten</a></li>
+        <li><a href="/kom-igang/">Kom igång</a></li>
+        <li><a href="/kontakt/">Kontakt</a></li>
+      </ul>
+      <a class="btn btn-primary" href="https://bookings.cloud.microsoft/bookwithme/user/aa3e1d3efdc740cd8d040a6217d3f782@custom46.com/meetingtype/5Ic_NFd3eEyxhRShdKH20Q2?bookingcode=93336e2b-7a61-4908-9747-11b28bbf9ae5&amp;anonymous&amp;ismsaljsauthenabled&amp;ep=mlink" target="_blank" rel="noopener">Boka intromöte</a>
+    </nav>
+    <a class="btn btn-primary head-cta" href="https://bookings.cloud.microsoft/bookwithme/user/aa3e1d3efdc740cd8d040a6217d3f782@custom46.com/meetingtype/5Ic_NFd3eEyxhRShdKH20Q2?bookingcode=93336e2b-7a61-4908-9747-11b28bbf9ae5&amp;anonymous&amp;ismsaljsauthenabled&amp;ep=mlink" target="_blank" rel="noopener">Boka intromöte</a>
+  </div>
+</header>
 
-<div class="wrap">
-  <nav><img class="logo" src="logo.svg" alt="cimpla" width="133" height="34"></nav>
-  <div class="band"><canvas id="hero"></canvas></div>
-  <div class="copy">
-    <h1>Automatisera <em>informationsflödet</em>, från leverantör till ert affärssystem.</h1>
-    <p>Lägger ni tid på att strukturera produktdata och söka igenom leverantörsinfo? Sluta med det.</p>
+<main id="main">
+  <div class="wrap">
+    <div class="band"><canvas id="hero" aria-hidden="true"></canvas></div>
+    <div class="hero-copy">
+      <h1>Mindre handpåläggning.<br class="br-wide"> Mer tid för det som <em>skapar värde</em>.</h1>
+      <p class="lede">cimpla automatiserar informationsflödet från leverantör till ert affärssystem. Orderbekräftelser som tidigare krävde allt från 5 till över 60 minuter att förbereda och läsa in går nu på ett klick.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="https://bookings.cloud.microsoft/bookwithme/user/aa3e1d3efdc740cd8d040a6217d3f782@custom46.com/meetingtype/5Ic_NFd3eEyxhRShdKH20Q2?bookingcode=93336e2b-7a61-4908-9747-11b28bbf9ae5&amp;anonymous&amp;ismsaljsauthenabled&amp;ep=mlink" target="_blank" rel="noopener">Boka intromöte <span class="arrow" aria-hidden="true">→</span></a>
+        <a class="btn btn-secondary" href="/produkt/">Så fungerar cimpla</a>
+      </div>
+    </div>
   </div>
 
-  <footer>
-    <span>Del av custom46 AB</span>
-    <a href="mailto:kontakt@custom46.com">kontakt@custom46.com</a>
-  </footer>
-</div>
+  <section class="sec sec-alt">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Varför cimpla</span>
+        <h2>Produktdata ska inte behöva <em>skrivas av</em>.</h2>
+        <p class="lede">Varje ny order och säsong betyder samma sak: leverantörens uppgifter ska föras över till ert system, rad för rad.</p>
+      </div>
+      <div class="grid g3">
+        <div class="card">
+          <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></svg></span>
+          <h3>Varje leverantör har sitt format</h3>
+          <p>PDF, Excel och egna kolumner. Ingen orderbekräftelse ser ut som den förra.</p>
+        </div>
+        <div class="card">
+          <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 9.5h16M4 15h16M9.5 4v16"/></svg></span>
+          <h3>Allt förs över för hand</h3>
+          <p>Benämning, färg, storlek, EAN, varugrupp, pris och säsong skrivs av eller klistras in.</p>
+        </div>
+        <div class="card">
+          <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span>
+          <h3>Tiden tas från annat</h3>
+          <p>Fel smyger sig in, och timmarna går från inköp, kampanjer och kunder.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Så fungerar det</span>
+        <h2>Tre steg från order till <em>import</em>.</h2>
+      </div>
+      <div class="grid g3">
+        <div class="card">
+          <span class="step-num">1</span>
+          <h3>Ladda upp</h3>
+          <p>Lägg in orderbekräftelsen som PDF eller Excel, i leverantörens eget format.</p>
+        </div>
+        <div class="card">
+          <span class="step-num">2</span>
+          <h3>cimpla gör jobbet</h3>
+          <p>Raderna matchas mot leverantörens prislista och er katalog och klassas enligt er indelning.</p>
+        </div>
+        <div class="card">
+          <span class="step-num">3</span>
+          <h3>Klart för import</h3>
+          <p>Ni får en färdig fil i ert importformat. Ni granskar och läser in i CleverApps.</p>
+        </div>
+      </div>
+      <p class="foot-note"><a href="/produkt/">Läs mer om hur cimpla fungerar <span class="arrow" aria-hidden="true">→</span></a></p>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <section class="sec">
+    <div class="wrap split">
+      <div>
+        <span class="eyebrow">Vad är cimpla?</span>
+        <h2>Tränad på <em>er</em> produktdata.</h2>
+        <p class="lede">cimpla är en helt ny lösning, framtagen för att minimera det manuella arbetet inom produktdata- och orderadministration för handlare. Modellen tränas på er produktdata och formatering och automatiserar dataflödet, så att ni slipper.</p>
+      </div>
+      <ul class="checks">
+        <li><strong>Lär sig ert sätt att arbeta</strong><span>Varugrupper, benämningar, priser och storlekar följer er egen katalog.</span></li>
+        <li><strong>Klarar leverantörernas format</strong><span>PDF eller Excel, med varje leverantörs egna kolumner och upplägg.</span></li>
+        <li><strong>Gissar aldrig</strong><span>Saknas ett värde i underlaget markeras raden för manuell hantering.</span></li>
+        <li><strong>Färdig för CleverApps</strong><span>Filen kommer i ert importformat och läses in direkt.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="sec sec-alt">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Resultat</span>
+        <h2>Från vår <em>första</em> kundpilot.</h2>
+        <p class="lede">Under de senaste månaderna har cimpla testats av en av Sveriges större sportfackhandlare, med mycket goda resultat.</p>
+      </div>
+      <div class="grid g3">
+        <div class="stat"><span class="num">1 000-tals</span><p>artiklar har körts genom modellen</p></div>
+        <div class="stat"><span class="num">20-tal</span><p>leverantörer och varumärken, över flera affärsområden</p></div>
+        <div class="stat"><span class="num">80+ timmar</span><p>frigjorda per månad för inköpsorganisationen</p></div>
+      </div>
+      <p class="foot-note">I snitt har 20 minuter per order eliminerats, med förbättrad kvalitet som följd.</p>
+    </div>
+  </section>
+
+  <section class="sec-tight">
+    <div class="wrap">
+      <div class="cta">
+        <div>
+          <h2>Se vad cimpla kan göra med <em>era</em> ordrar.</h2>
+          <p>Boka ett intromöte på 30 minuter, så går vi igenom era leverantörer och hur ni kommer igång.</p>
+        </div>
+        <div class="cta-actions">
+          <a class="btn btn-light" href="https://bookings.cloud.microsoft/bookwithme/user/aa3e1d3efdc740cd8d040a6217d3f782@custom46.com/meetingtype/5Ic_NFd3eEyxhRShdKH20Q2?bookingcode=93336e2b-7a61-4908-9747-11b28bbf9ae5&amp;anonymous&amp;ismsaljsauthenabled&amp;ep=mlink" target="_blank" rel="noopener">Boka intromöte <span class="arrow" aria-hidden="true">→</span></a>
+          <a class="btn btn-outline-light" href="/kontakt/">Kontakta oss</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <img src="/logo.svg" alt="cimpla" width="110" height="28">
+        <p>Automatiserad inläsning av orderbekräftelser och produktdata för handlare.</p>
+      </div>
+      <div>
+        <h4>Sidor</h4>
+        <ul>
+          <li><a href="/">Start</a></li>
+          <li><a href="/produkt/">Produkten</a></li>
+          <li><a href="/kom-igang/">Kom igång</a></li>
+          <li><a href="/kontakt/">Kontakt</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Kontakt</h4>
+        <ul>
+          <li><a href="https://bookings.cloud.microsoft/bookwithme/user/aa3e1d3efdc740cd8d040a6217d3f782@custom46.com/meetingtype/5Ic_NFd3eEyxhRShdKH20Q2?bookingcode=93336e2b-7a61-4908-9747-11b28bbf9ae5&amp;anonymous&amp;ismsaljsauthenabled&amp;ep=mlink" target="_blank" rel="noopener">Boka intromöte</a></li>
+          <li><a href="mailto:info@cimpla.se">info@cimpla.se</a></li>
+          <li><a href="https://portal.cimpla.se">Logga in i kundportalen</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© <span data-year>2026</span> custom46 AB</span>
+      <span>cimpla är en produkt från custom46 AB</span>
+    </div>
+  </div>
+</footer>
 
 <dialog id="signup" aria-labelledby="signupTitle">
   <div class="modal">
     <h2 id="signupTitle">Håll mig informerad</h2>
     <p class="lede">Lämna din mejladress så hör vi av oss när cimpla öppnar för fler kunder.</p>
-
-    <form id="signupForm" name="pilot" method="POST" action="/pilot">
+    <form id="signupForm" method="POST" action="/pilot" novalidate>
+      <input type="hidden" name="amne" value="intresse">
       <p class="hp"><label>Lämna tomt <input name="bot-field" tabindex="-1" autocomplete="off"></label></p>
-
       <div class="field">
         <label for="email">Mejladress</label>
-        <input id="email" type="email" name="email" required autocomplete="email"
-               placeholder="namn@företaget.se">
+        <input id="email" type="email" name="email" required autocomplete="email" placeholder="namn@företaget.se">
       </div>
       <div class="field">
         <label for="message">Något du vill berätta? (valfritt)</label>
-        <textarea id="message" name="meddelande" rows="3"
-                  placeholder="Vilka system använder ni i dag?"></textarea>
+        <textarea id="message" name="meddelande" rows="3" placeholder="Vilka system använder ni i dag?"></textarea>
       </div>
-
       <div class="actions">
-        <button type="submit" class="send">Skicka</button>
+        <button type="submit" class="btn btn-primary">Skicka</button>
         <button type="button" class="cancel" data-close>Avbryt</button>
       </div>
-      <p class="note" id="signupErr" hidden>
-        Det gick inte att skicka just nu. Mejla oss gärna direkt på
-        <a href="mailto:kontakt@custom46.com">kontakt@custom46.com</a>.
+      <p class="note err" data-err hidden>
+        Det gick inte att skicka just nu. Mejla oss gärna direkt på <a href="mailto:info@cimpla.se">info@cimpla.se</a>.
       </p>
     </form>
-
     <div id="signupDone" hidden>
       <p class="lede">Tack — vi hör av oss.</p>
-      <div class="actions"><button type="button" class="send" data-close>Stäng</button></div>
+      <div class="actions"><button type="button" class="btn btn-primary" data-close>Stäng</button></div>
     </div>
   </div>
 </dialog>
 
-<script>
-(function(){
-  var dlg=document.getElementById('signup'),
-      form=document.getElementById('signupForm'),
-      done=document.getElementById('signupDone'),
-      err=document.getElementById('signupErr'),
-      send=form.querySelector('.send');
-
-  function open(){
-    if(dlg.showModal) dlg.showModal(); else dlg.setAttribute('open','');
-    var e=document.getElementById('email'); if(e) e.focus();
-  }
-  function close(){ if(dlg.close) dlg.close(); else dlg.removeAttribute('open'); }
-
-  [].forEach.call(document.querySelectorAll('[data-open]'),function(b){
-    b.addEventListener('click',open);
-  });
-  [].forEach.call(document.querySelectorAll('[data-close]'),function(b){
-    b.addEventListener('click',close);
-  });
-  // klick utanfor rutan stanger
-  dlg.addEventListener('click',function(ev){ if(ev.target===dlg) close(); });
-
-  form.addEventListener('submit',function(ev){
-    if(!form.reportValidity()) return;      // webblasarens egen validering styr
-    ev.preventDefault();
-    err.hidden=true; send.disabled=true; send.textContent='Skickar…';
-    fetch('/pilot',{
-      method:'POST',
-      headers:{'Content-Type':'application/x-www-form-urlencoded'},
-      body:new URLSearchParams(new FormData(form)).toString()
-    }).then(function(r){
-      if(!r.ok) throw new Error(r.status);
-      form.hidden=true; done.hidden=false;
-    })['catch'](function(){
-      send.disabled=false; send.textContent='Skicka'; err.hidden=false;
-    });
-  });
-})();
-</script>
-
-<script>
-(function(){
-  var cv=document.getElementById('hero'), ctx=cv.getContext('2d');
-  var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  // ---------- installningar ----------
-  var DOC_SET=[0,1,2,3,4];   // vilka dokumenttyper som roterar i vanstra flodet
-  var CYCLE=5.6;             // sekunder per dokument i en slot
-  var SLOTS=4;               // antal dokumentplatser i vanstra flodet
-  var SCROLL=38;             // e-handelsvyns scrollfart, designenheter per sekund
-  var DESIGN=430;            // e-handelsvyns designbredd i enheter
-
-  // ---------- smaverktyg ----------
-  var SANS='"IBM Plex Sans",system-ui,sans-serif';
-  var MONO='"IBM Plex Mono",ui-monospace,Menlo,monospace';
-  var SERIF='"Instrument Serif",Georgia,serif';
-  function lerp(a,b,t){return a+(b-a)*t;}
-  function clamp01(t){return t<0?0:t>1?1:t;}
-  function easeOut(t){return 1-Math.pow(1-t,3);}
-  function hash(n,s){var x=Math.sin(n*127.1+s*311.7)*43758.5453;return x-Math.floor(x);}
-  function g(a){return 'rgba(21,115,90,'+a+')';}
-  function ink(a){return 'rgba(28,27,25,'+a+')';}
-  function rr(c,x,y,w,h,r){
-    r=Math.min(r,Math.abs(w)/2,Math.abs(h)/2);
-    c.beginPath(); c.moveTo(x+r,y);
-    c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r);
-    c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath();
-  }
-  function bar(c,x,y,w,h,col){ rr(c,x,y,w,h,Math.min(h/2,2.5)); c.fillStyle=col; c.fill(); }
-  function T(c,s,x,y,size,weight,col,align,face){
-    c.font=(weight?weight+' ':'')+size.toFixed(2)+'px '+(face||SANS);
-    c.textAlign=align||'left'; c.textBaseline='alphabetic';
-    c.fillStyle=col; c.fillText(s,x,y);
-  }
-  // punkt pa en kubisk bezier
-  function bez(p,x0,y0,x1,y1,x2,y2,x3,y3){
-    var m=1-p, a=m*m*m, b=3*m*m*p, c=3*m*p*p, d=p*p*p;
-    return {x:a*x0+b*x1+c*x2+d*x3, y:a*y0+b*y1+c*y2+d*y3};
-  }
-
-  var W,H,DPR,VW,OX,docCX,docH,docSX,docSY,box,br,scale,chU,cols;
-
-  // ---------- dokumenttyper (vanstra flodet) ----------
-  // Abstrakta ark, ingen lasbar text. Badgen ar det enda som namnger formatet.
-  var DOCS=[
-    {t:0,lw:210,lh:272,fit:1.00,tint:'#FFFFFF',skew:0    },  // pdf
-    {t:1,lw:264,lh:186,fit:0.74,tint:'#FFFFFF',skew:0    },  // kalkylblad
-    {t:2,lw:210,lh:272,fit:1.00,tint:'#FFFFFF',skew:0    },  // textdokument
-    {t:3,lw:206,lh:266,fit:0.98,tint:'#FCFBF5',skew:0.028},  // skannat ark
-    {t:4,lw:172,lh:296,fit:1.00,tint:'#F7F6F4',skew:0    }   // chatt
-  ];
-  // var pa arket varden plockas ut (andel av hojden)
-  var ANCHORS=[0.34,0.52,0.70];
-
-  function badge(c,x,y,txt,r,gr,b){
-    rr(c,x,y,32,14,3); c.fillStyle='rgba('+r+','+gr+','+b+',.12)'; c.fill();
-    T(c,txt,x+16,y+10,7.2,'700','rgba('+r+','+gr+','+b+',.85)','center');
-  }
-
-  function drawPdf(c,d){
-    var lw=d.lw;
-    badge(c,14,14,'PDF',176,62,52);
-    bar(c,14,40,lw*0.58,9,ink(.22));
-    bar(c,14,55,lw*0.34,6,ink(.13));
-    for(var i=0;i<5;i++) bar(c,14,78+i*10,(lw-28)*(0.66+0.30*hash(i,1)),4.2,ink(.10));
-    c.strokeStyle=ink(.12); c.lineWidth=0.7;
-    c.beginPath(); c.moveTo(14,138); c.lineTo(lw-14,138); c.stroke();
-    for(var r=0;r<5;r++){
-      var y=148+r*13;
-      bar(c,14,y,30,5,ink(.16));
-      bar(c,54,y,lw*0.36,5,ink(.10));
-      bar(c,lw-52,y,38,5,ink(.13));
-    }
-    bar(c,lw-86,224,72,7,ink(.18));
-  }
-
-  function drawSheet(c,d){
-    var lw=d.lw, lh=d.lh, gut=14, top=26, rowH=16;
-    badge(c,lw-46,8,'XLS',24,110,70);
-    c.fillStyle='#F4F3F0'; c.fillRect(0,top-12,lw,12); c.fillRect(0,top-12,gut,lh);
-    var colX=[gut,gut+56,gut+118,gut+172,lw];
-    c.fillStyle=g('.07'); c.fillRect(gut,top,lw-gut,rowH);
-    c.strokeStyle=ink(.10); c.lineWidth=0.5;
-    for(var v=0;v<colX.length;v++){ c.beginPath(); c.moveTo(colX[v]+0.25,top-12); c.lineTo(colX[v]+0.25,lh); c.stroke(); }
-    var rows=Math.ceil((lh-top)/rowH);
-    for(var r=0;r<=rows;r++){
-      var y=top+r*rowH;
-      c.beginPath(); c.moveTo(0,y+0.25); c.lineTo(lw,y+0.25); c.stroke();
-    }
-    for(var h=0;h<4;h++) bar(c,colX[h]+5,top+5.5,Math.min(34,colX[h+1]-colX[h]-12),5,g('.45'));
-    for(var s=0;s<rows-1;s++){
-      var yy=top+(s+1)*rowH+5.5;
-      if(yy>lh-8) break;
-      bar(c,colX[0]+5,yy,40,5,ink(.20));
-      bar(c,colX[1]+5,yy,(colX[2]-colX[1]-14)*(0.62+0.34*hash(s,2)),5,ink(.13));
-      bar(c,colX[3]-22,yy,16,5,ink(.18));
-      bar(c,colX[4]-46,yy,34,5,ink(.12));
-    }
-  }
-
-  function drawWord(c,d){
-    var lw=d.lw;
-    badge(c,14,14,'DOC',52,92,150);
-    bar(c,(lw-118)/2,44,118,9,ink(.22));
-    bar(c,(lw-70)/2,58,70,5,ink(.11));
-    for(var p=0;p<3;p++){
-      var y0=82+p*54;
-      for(var i=0;i<4;i++){
-        var w=(lw-28)*(i===3?0.44+0.2*hash(p*4+i,5):0.88+0.1*hash(p*4+i,4));
-        bar(c,14,y0+i*10,w,4.2,ink(.11));
-      }
-    }
-    bar(c,14,244,lw*0.30,5,ink(.14));
-  }
-
-  function drawScan(c,d){
-    var lw=d.lw, lh=d.lh;
-    c.strokeStyle='rgba(90,120,140,.18)'; c.lineWidth=0.6;
-    for(var y=44;y<lh-16;y+=19){ c.beginPath(); c.moveTo(14,y+0.3); c.lineTo(lw-14,y+0.3); c.stroke(); }
-    c.strokeStyle='rgba(190,90,80,.20)';
-    c.beginPath(); c.moveTo(26,0); c.lineTo(26,lh); c.stroke();
-    // handskrivna slingor
-    c.strokeStyle='rgba(30,45,70,.52)'; c.lineWidth=1.5; c.lineCap='round';
-    for(var l=0;l<6;l++){
-      var yy=40+l*19, x=32, end=x+(lw-66)*(0.42+0.52*hash(l,7));
-      c.beginPath(); c.moveTo(x,yy-4);
-      for(var s=0;x+s<end;s+=9){
-        var up=(s/9)%2?-6:-1;
-        c.quadraticCurveTo(x+s+4.5,yy-4+up,x+s+9,yy-4+(hash(l*9+s,8)-0.5)*3);
-      }
-      c.stroke();
-    }
-    c.lineWidth=1; c.lineCap='butt';
-    // vikt horn
-    c.fillStyle='rgba(40,34,24,.08)';
-    c.beginPath(); c.moveTo(lw-26,lh); c.lineTo(lw,lh-26); c.lineTo(lw,lh); c.closePath(); c.fill();
-    // fotoljus
-    var pg=c.createLinearGradient(0,0,lw,lh);
-    pg.addColorStop(0,'rgba(255,255,255,.30)');
-    pg.addColorStop(0.55,'rgba(255,255,255,0)');
-    pg.addColorStop(1,'rgba(40,34,24,.10)');
-    c.fillStyle=pg; c.fillRect(0,0,lw,lh);
-  }
-
-  function drawChat(c,d){
-    var lw=d.lw, lh=d.lh;
-    c.fillStyle='#FFFFFF'; c.fillRect(0,0,lw,44);
-    c.strokeStyle=ink(.10); c.lineWidth=0.6;
-    c.beginPath(); c.moveTo(0,44.3); c.lineTo(lw,44.3); c.stroke();
-    c.beginPath(); c.arc(22,28,9,0,6.2832); c.fillStyle='#E3E1DC'; c.fill();
-    bar(c,38,22,64,7,ink(.20)); bar(c,38,33,40,5,ink(.10));
-    function bub(x,y,w,h,mine){
-      rr(c,x,y,w,h,8); c.fillStyle=mine?'rgba(21,115,90,.14)':'#FFFFFF'; c.fill();
-      if(!mine){ c.strokeStyle=ink(.09); c.lineWidth=0.7; c.stroke(); }
-      var n=Math.max(1,Math.floor(h/12));
-      for(var i=0;i<n;i++)
-        bar(c,x+9,y+9+i*11,(w-22)*(0.55+0.4*hash(x+i,9)),4.2,mine?g('.42'):ink(.14));
-    }
-    bub(12,56,116,34,false);
-    bub(12,98,124,48,false);
-    bub(lw-104,154,92,24,true);
-    bub(12,186,120,34,false);
-    bub(lw-118,228,106,24,true);
-    c.fillStyle='#FFFFFF'; c.fillRect(0,lh-32,lw,32);
-    c.strokeStyle=ink(.10);
-    c.beginPath(); c.moveTo(0,lh-31.7); c.lineTo(lw,lh-31.7); c.stroke();
-    rr(c,12,lh-24,lw-48,17,8.5); c.fillStyle='#F2F1EE'; c.fill();
-    c.beginPath(); c.arc(lw-20,lh-15.5,8.5,0,6.2832); c.fillStyle=g('.80'); c.fill();
-  }
-
-  var PAINT=[drawPdf,drawSheet,drawWord,drawScan,drawChat];
-
-  // ---------- enkla produktbilder i butiken ----------
-  // Medvetet blandat sortiment, inte bara sport och klader.
-  var KINDS=18;
-  // Steget 7 ar relativt primt med 18, sa tva kort under varandra i samma
-  // kolumn far aldrig samma produkt. SEQ blandar ordningen sa att det inte
-  // heller syns som en rullande sekvens.
-  var SEQ=[0,9,4,13,7,16,2,11,5,14,1,10,6,15,3,12,8,17];
-  function productKind(n,c){ return SEQ[((n*7+c*3)%KINDS+KINDS)%KINDS]; }
-  function drawProduct(c,kind,x,y,w,h){
-    function X(n){return x+n*w;}
-    function Y(n){return y+n*h;}
-    var s=Math.min(w,h);
-    c.save();
-    c.strokeStyle=ink(.42); c.fillStyle=ink(.07);
-    c.lineWidth=Math.max(0.8,s*0.042); c.lineJoin='round'; c.lineCap='round';
-    function path(pts,close,fill){
-      c.beginPath(); c.moveTo(X(pts[0]),Y(pts[1]));
-      for(var i=2;i<pts.length;i+=2) c.lineTo(X(pts[i]),Y(pts[i+1]));
-      if(close) c.closePath();
-      if(fill) c.fill();
-      c.stroke();
-    }
-    function circle(nx,ny,nr){ c.beginPath(); c.arc(X(nx),Y(ny),nr*s,0,6.2832); c.stroke(); }
-    function box(nx,ny,nw,nh,r){ rr(c,X(nx),Y(ny),nw*w,nh*h,r*s); c.fill(); c.stroke(); }
-    switch(kind){
-      case 0: // cykel
-        circle(0.24,0.68,0.155); circle(0.76,0.68,0.155);
-        path([0.24,0.68, 0.42,0.38, 0.62,0.38, 0.76,0.68]);
-        path([0.42,0.38, 0.58,0.68]);
-        path([0.37,0.34, 0.48,0.34]);
-        path([0.62,0.38, 0.70,0.29, 0.79,0.29]);
-        break;
-      case 1: // trojja
-        path([0.31,0.30, 0.42,0.22, 0.58,0.22, 0.69,0.30, 0.82,0.42, 0.72,0.53,
-              0.67,0.47, 0.67,0.80, 0.33,0.80, 0.33,0.47, 0.28,0.53, 0.18,0.42],true,true);
-        path([0.42,0.22, 0.50,0.30, 0.58,0.22]);
-        break;
-      case 2: // sko
-        path([0.14,0.70, 0.14,0.56, 0.28,0.49, 0.41,0.55, 0.57,0.57, 0.76,0.62,
-              0.86,0.67, 0.86,0.70],true,true);
-        path([0.22,0.55, 0.31,0.60]); path([0.29,0.51, 0.38,0.57]);
-        break;
-      case 3: // elscooter
-        circle(0.22,0.74,0.095); circle(0.75,0.74,0.095);
-        path([0.22,0.76, 0.70,0.76]);
-        path([0.31,0.74, 0.39,0.26]);
-        path([0.28,0.26, 0.52,0.26]);
-        break;
-      case 4: // horlurar
-        c.beginPath(); c.arc(X(0.5),Y(0.54),0.27*s,Math.PI,0); c.stroke();
-        box(0.15,0.50,0.15,0.28,0.05); box(0.70,0.50,0.15,0.28,0.05);
-        break;
-      case 5: // stol
-        path([0.30,0.56, 0.70,0.56]);
-        path([0.63,0.56, 0.58,0.22, 0.43,0.25]);
-        path([0.34,0.56, 0.31,0.80]);
-        path([0.65,0.56, 0.69,0.80]);
-        break;
-      case 6: // bordslampa
-        path([0.36,0.24, 0.64,0.24, 0.75,0.48, 0.25,0.48],true,true);
-        path([0.50,0.48, 0.50,0.74]);
-        path([0.35,0.76, 0.65,0.76]);
-        break;
-      case 7: // borrmaskin
-        box(0.22,0.36,0.36,0.20,0.04);
-        path([0.58,0.41, 0.79,0.41, 0.79,0.51, 0.58,0.51],true,true);
-        path([0.30,0.56, 0.34,0.78, 0.48,0.78, 0.46,0.56]);
-        break;
-      case 8: // ryggsack
-        box(0.30,0.30,0.40,0.50,0.10);
-        path([0.41,0.30, 0.43,0.22, 0.57,0.22, 0.59,0.30]);
-        path([0.34,0.60, 0.66,0.60]);
-        break;
-      case 9: // kaffebryggare
-        path([0.32,0.22, 0.62,0.22, 0.62,0.50, 0.32,0.50],true,true);
-        path([0.36,0.56, 0.68,0.56, 0.64,0.78, 0.40,0.78],true,true);
-        path([0.68,0.60, 0.77,0.65, 0.68,0.71]);
-        break;
-      case 10: // tv
-        box(0.16,0.24,0.68,0.40,0.03);
-        path([0.50,0.64, 0.50,0.74]);
-        path([0.36,0.76, 0.64,0.76]);
-        break;
-      case 11: // armbandsur
-        circle(0.50,0.50,0.185);
-        path([0.41,0.33, 0.39,0.17, 0.61,0.17, 0.59,0.33]);
-        path([0.41,0.67, 0.39,0.83, 0.61,0.83, 0.59,0.67]);
-        path([0.50,0.42, 0.50,0.50, 0.57,0.53]);
-        break;
-      case 12: // bocker
-        box(0.26,0.32,0.12,0.46,0.02);
-        box(0.41,0.25,0.13,0.53,0.02);
-        box(0.57,0.37,0.11,0.41,0.02);
-        break;
-      case 13: // krukvaxt
-        path([0.37,0.58, 0.63,0.58, 0.59,0.80, 0.41,0.80],true,true);
-        path([0.50,0.58, 0.50,0.34]);
-        c.beginPath();
-        c.moveTo(X(0.50),Y(0.44));
-        c.quadraticCurveTo(X(0.28),Y(0.40),X(0.34),Y(0.24)); c.stroke();
-        c.beginPath();
-        c.moveTo(X(0.50),Y(0.40));
-        c.quadraticCurveTo(X(0.72),Y(0.36),X(0.66),Y(0.20)); c.stroke();
-        break;
-      case 14: // kastrull
-        path([0.31,0.42, 0.69,0.42, 0.65,0.72, 0.35,0.72],true,true);
-        path([0.69,0.47, 0.83,0.45]);
-        path([0.27,0.40, 0.73,0.40]);
-        path([0.50,0.40, 0.50,0.32]);
-        break;
-      case 15: // mobiltelefon
-        box(0.36,0.18,0.28,0.64,0.06);
-        path([0.46,0.25, 0.54,0.25]);
-        circle(0.50,0.75,0.022);
-        break;
-      case 16: // tvattmaskin
-        box(0.25,0.22,0.50,0.58,0.03);
-        circle(0.50,0.55,0.135);
-        path([0.31,0.30, 0.41,0.30]);
-        circle(0.68,0.30,0.022);
-        break;
-      default: // solglasogon
-        box(0.17,0.42,0.26,0.19,0.06);
-        box(0.57,0.42,0.26,0.19,0.06);
-        path([0.43,0.47, 0.50,0.44, 0.57,0.47]);
-        path([0.17,0.45, 0.09,0.36]);
-        path([0.83,0.45, 0.91,0.36]);
-    }
-    c.restore();
-  }
-
-  // ---------- layout ----------
-  // Zonerna forhaller sig ungefar 2 / 1 / 3 i bredd: dokumenten, boxen, butiken.
-  //
-  // Pa smal skarm KRYMPER vi inte kompositionen. Vi ritar den i en virtuell
-  // bredd VW som ar bredare an duken, centrerar den och later kanterna beskaras
-  // -- samma vy som pa webben, bara med mindre av den synlig. Zonerna dras
-  // samtidigt nagot mot mitten sa att mer av flodet ryms innanfor snittet.
-  var VBASE=900;      // over den har bredden sker ingen beskarning
-  var VZOOM=1.38;     // hur mycket storre kompositionen ritas nar det ar som smalast
-  var VPULL=0.10;     // hur hart zonerna dras mot mitten da
-
-  function layout(){
-    var t=clamp01((VBASE-W)/525);
-    var zoom=lerp(1,VZOOM,t);
-    VW=W*zoom; OX=(VW-W)/2;
-    var sq=VPULL*t, cx=VW/2;
-    function pull(x){ return cx+(x-cx)*(1-sq); }
-
-    docH  = H*0.36;
-    docCX = pull(VW*0.165);
-    docSX = VW*0.080*(1-sq);   // hur brett dokumenten sprids i sidled
-    docSY = H*0.24;            // ... och i hojdled
-    var bw=VW*0.115, bh=H*0.20;
-    box={w:bw,h:bh,x:pull(VW*0.457)-bw/2,y:(H-bh)/2};
-    var brw=VW*0.400, brh=H*0.84;
-    br={x:pull(VW-brw/2-VW*0.012)-brw/2, y:(H-brh)/2, w:brw, h:brh,
-        chrome:Math.max(15,brh*0.062)};
-    scale=br.w/DESIGN;
-    chU=(br.h-br.chrome)/scale;
-    cols=br.w>320?3:2;
-  }
-  function resize(){
-    DPR=Math.min(window.devicePixelRatio||1,2);
-    var r=cv.getBoundingClientRect(); W=r.width; H=r.height;
-    cv.width=Math.round(W*DPR); cv.height=Math.round(H*DPR);
-    ctx.setTransform(DPR,0,0,DPR,0,0); layout();
-  }
-
-  // ---------- bakgrund ----------
-  function bg(){
-    ctx.fillStyle='#FFFFFF'; ctx.fillRect(0,0,VW,H);
-    var g1=ctx.createRadialGradient(docCX,H*0.5,0,docCX,H*0.5,VW*0.26);
-    g1.addColorStop(0,'rgba(168,112,66,.050)'); g1.addColorStop(1,'rgba(168,112,66,0)');
-    ctx.fillStyle=g1; ctx.fillRect(0,0,VW,H);
-    var g2=ctx.createRadialGradient(box.x+box.w/2,H*0.5,0,box.x+box.w/2,H*0.5,VW*0.20);
-    g2.addColorStop(0,'rgba(21,115,90,.075)'); g2.addColorStop(1,'rgba(21,115,90,0)');
-    ctx.fillStyle=g2; ctx.fillRect(0,0,VW,H);
-  }
-
-  // ---------- vanster: dokumentens livscykel ----------
-  // u 0..1: 0-.20 poppar upp, .20-.74 varden extraheras, .74-1 krymper bort
-  // Varje plats har EGEN periodlangd, inte bara egen fas -- med samma period
-  // foljde dokumenten varandra i jamn takt for alltid. Olika perioder gor att
-  // de driver isar och aldrig gar i takt.
-  var PER=[1.00,1.31,0.84,1.15], OFF=[0.00,0.41,0.73,0.22];
-  function slotState(i,t){
-    var raw=t/(CYCLE*PER[i%4]) + OFF[i%4];
-    var u=raw-Math.floor(raw), lap=Math.floor(raw);
-    var idx=((i+lap*SLOTS)%DOC_SET.length+DOC_SET.length)%DOC_SET.length;
-    var def=DOCS[DOC_SET[idx]], seed=i*31+lap*7;
-    var inn=clamp01(u/0.20), out=clamp01((u-0.74)/0.26);
-    var s=lerp(0.52,1,easeOut(inn))*lerp(1,0.46,out*out);
-    return {
-      def:def, u:u, s:s, seed:seed,
-      a:Math.min(clamp01(u/0.10),1-out),
-      x:docCX+(hash(seed,1)-0.5)*2*docSX,
-      y:H*0.5+(hash(seed,2)-0.5)*2*docSY+Math.sin(t*0.5+i*2)*3,
-      rot:(hash(seed,3)-0.5)*0.13*(1-inn*0.6),
-      ex:clamp01((u-0.20)/0.10)*(1-clamp01((u-0.70)/0.06)),
-      lift:lerp(16,0,easeOut(inn))
-    };
-  }
-
-  function drawDoc(st){
-    if(st.a<=0.012) return;
-    var def=st.def, k=(docH*def.fit/def.lh)*st.s;
-    ctx.save();
-    ctx.globalAlpha=st.a;
-    ctx.translate(st.x,st.y+st.lift);
-    ctx.rotate(st.rot+def.skew);
-    ctx.scale(k,k);
-    ctx.translate(-def.lw/2,-def.lh/2);
-
-    ctx.save();
-    ctx.shadowColor='rgba(38,32,24,.20)'; ctx.shadowBlur=28/k; ctx.shadowOffsetY=14/k;
-    ctx.fillStyle=def.tint; ctx.fillRect(0,0,def.lw,def.lh);
-    ctx.restore();
-    ctx.fillStyle=def.tint; ctx.fillRect(0,0,def.lw,def.lh);
-
-    ctx.save();
-    ctx.beginPath(); ctx.rect(0,0,def.lw,def.lh); ctx.clip();
-    PAINT[def.t](ctx,def);
-    ctx.restore();
-    ctx.strokeStyle=ink(.13); ctx.lineWidth=0.8;
-    ctx.strokeRect(0.4,0.4,def.lw-0.8,def.lh-0.8);
-
-    // markerade varden
-    if(st.ex>0){
-      for(var i=0;i<ANCHORS.length;i++){
-        var pop=clamp01((st.ex-i*0.12)/0.22);
-        if(pop<=0) continue;
-        var fy=def.lh*ANCHORS[i], fh=Math.max(10,def.lh*0.052),
-            fx=def.lw*0.10, fw=def.lw*(0.52+0.22*hash(st.seed+i,4));
-        var sc=lerp(1.06,1,pop);
-        ctx.save();
-        ctx.translate(fx+fw/2,fy); ctx.scale(sc,sc);
-        rr(ctx,-fw/2,-fh/2,fw,fh,2);
-        ctx.fillStyle=g((0.09*pop).toFixed(3)); ctx.fill();
-        ctx.strokeStyle=g((0.60*pop).toFixed(3)); ctx.lineWidth=1; ctx.stroke();
-        ctx.restore();
-      }
-    }
-    ctx.restore();
-  }
-
-  // ---------- pulserande streck: dokument -> box ----------
-  function drawExtraction(t,states){
-    var bx=box.x, by=box.y;
-    for(var s=0;s<states.length;s++){
-      var st=states[s];
-      if(st.ex<=0.01||st.a<=0.05) continue;
-      var def=st.def, k=(docH*def.fit/def.lh)*st.s;
-      var x0=st.x+def.lw*k*0.46;
-      for(var i=0;i<ANCHORS.length;i++){
-        var pop=clamp01((st.ex-i*0.12)/0.22);
-        if(pop<=0.02) continue;
-        var y0=st.y+st.lift+(ANCHORS[i]-0.5)*def.lh*k;
-        var y3=by+box.h*(0.30+0.18*i)+Math.sin(t*0.6+i)*2;
-        var x1=lerp(x0,bx,0.42), x2=lerp(x0,bx,0.62);
-        ctx.save();
-        ctx.setLineDash([2.5,7]); ctx.lineDashOffset=-(t*64+i*5);
-        ctx.strokeStyle=g((0.30*pop*st.a).toFixed(3)); ctx.lineWidth=1;
-        ctx.beginPath(); ctx.moveTo(x0,y0);
-        ctx.bezierCurveTo(x1,y0,x2,y3,bx-1,y3); ctx.stroke();
-        ctx.restore();
-        for(var d=0;d<2;d++){
-          var pp=(t*0.42+i*0.31+d*0.5+s*0.17)%1;
-          var pt=bez(pp,x0,y0,x1,y0,x2,y3,bx-1,y3);
-          var fade=Math.sin(pp*Math.PI);
-          ctx.fillStyle=g((0.85*fade*pop*st.a).toFixed(3));
-          rr(ctx,pt.x-2.6,pt.y-1.5,5.2,3,1.5); ctx.fill();
-        }
-      }
-    }
-  }
-
-  // ---------- mitten: insamlingsboxen ----------
-  // cimpla-symbolen: prickrutnat som gar fran utspritt/blekt (vanster) till
-  // samlat gront (hoger) - samma metafor som hela floodet. Koordinaterna ar
-  // hamtade rakt ur symbol.svg (viewBox 0 -0.50781 0.47493 0.50781 efter /1000).
-  var SYMD=[
-    0.01803,-0.48978,0.01803, 0.18280,-0.44704,0.02357, 0.30215,-0.41479,0.02911, 0.44029,-0.41144,0.03464,
-    0.12249,-0.34295,0.01803, 0.19731,-0.31110,0.02357, 0.30577,-0.30146,0.02911, 0.44029,-0.28805,0.03464,
-    0.13507,-0.10413,0.01803, 0.22453,-0.19631,0.02357, 0.31044,-0.16035,0.02911, 0.44029,-0.16467,0.03464,
-    0.14517,-0.12287,0.01803, 0.20445,-0.02357,0.02357, 0.31711,-0.05226,0.02911, 0.44029,-0.04129,0.03464
-  ];
-  var SYMC=[[74,107,98,0.22],[56,109,95,0.48],[38,112,92,0.74],[21,115,90,1.0]];
-  function drawSymbol(x0,y0,S,ga){
-    for(var i=0;i<16;i++){
-      var nx=SYMD[i*3], ny=SYMD[i*3+1], nr=SYMD[i*3+2], c=SYMC[i%4];
-      var px=x0+nx/0.47493*S, py=y0+(ny+0.50781)/0.50781*S, r=nr/0.50781*S;
-      ctx.beginPath(); ctx.arc(px,py,r,0,6.2832);
-      ctx.fillStyle='rgba('+c[0]+','+c[1]+','+c[2]+','+(c[3]*ga).toFixed(3)+')'; ctx.fill();
-    }
-  }
-
-  function drawBox(t){
-    if(box.w<20||box.h<12) return;   // innan canvasen fatt storlek: rita inget
-    ctx.save();
-    ctx.shadowColor='rgba(40,34,26,.16)'; ctx.shadowBlur=24; ctx.shadowOffsetY=10;
-    rr(ctx,box.x,box.y,box.w,box.h,9); ctx.fillStyle='#FFFFFF'; ctx.fill();
-    ctx.restore();
-    rr(ctx,box.x+0.5,box.y+0.5,box.w-1,box.h-1,9);
-    ctx.strokeStyle=ink(.14); ctx.lineWidth=1; ctx.stroke();
-
-    // I boxen star hela loggan: symbolen + ordmarket, pulserande. Punkten i
-    // samma farg som texten (inte gron), vilande PA baslinjen - satt som loggan.
-    var pad=Math.max(6,box.w*0.09), avail=box.w-pad*2;
-    ctx.font='400 10px '+SERIF;
-    var u10=ctx.measureText('cimpla').width||26, ur=u10/10;
-    var gap=0.34, symW=0.935, dotSp=0.289;                 // i enheter av fs
-    var fs=Math.min(box.h*0.46, avail/(symW+gap+ur+dotSp));
-    var puls=0.5+0.5*Math.sin(t*2.0);
-    var dr=Math.max(1.2,fs*0.085);
-    ctx.font='400 '+fs.toFixed(2)+'px '+SERIF;
-    var tw=ctx.measureText('cimpla').width;
-    var total=fs*symW+fs*gap+tw+dr*3.4;
-    var startX=box.x+(box.w-total)/2, cy=box.y+box.h/2;
-    var by=cy+fs*0.34;
-    var a=0.26+0.74*puls, sc=0.975+0.05*puls;
-    ctx.save();
-    ctx.translate(box.x+box.w/2,cy);
-    ctx.scale(sc,sc);
-    ctx.translate(-(box.x+box.w/2),-cy);
-    drawSymbol(startX, cy-fs/2, fs, a);
-    var tx=startX+fs*symW+fs*gap;
-    T(ctx,'cimpla',tx,by,fs,'400',ink(a.toFixed(3)),'left',SERIF);
-    ctx.beginPath(); ctx.arc(tx+tw+dr*1.7,by-dr*0.95,dr,0,6.2832);
-    ctx.fillStyle=ink(a.toFixed(3)); ctx.fill();
-    ctx.restore();
-  }
-
-  // ---------- pulserande nod: box -> e-handelsvy ----------
-  function drawNode(t){
-    var x0=box.x+box.w, y0=box.y+box.h/2, x3=br.x, y3=br.y+br.h*0.42;
-    var x1=lerp(x0,x3,0.45), x2=lerp(x0,x3,0.6);
-    ctx.save();
-    ctx.setLineDash([2.5,7]); ctx.lineDashOffset=-(t*70);
-    ctx.strokeStyle=g('.32'); ctx.lineWidth=1.1;
-    ctx.beginPath(); ctx.moveTo(x0+2,y0); ctx.bezierCurveTo(x1,y0,x2,y3,x3-1,y3); ctx.stroke();
-    ctx.restore();
-    for(var d=0;d<3;d++){
-      var pp=(t*0.34+d/3)%1;
-      var pt=bez(pp,x0+2,y0,x1,y0,x2,y3,x3-1,y3), fade=Math.sin(pp*Math.PI);
-      ctx.fillStyle=g((0.85*fade).toFixed(3));
-      rr(ctx,pt.x-3,pt.y-1.7,6,3.4,1.7); ctx.fill();
-    }
-    return (t*0.34)%1;
-  }
-
-  // ---------- hoger: e-handelsvyn ----------
-  // varje falt far sin egen lilla forskjutning sa att de inte dyker upp samtidigt
-  function thr(base,n,c2,slot){ return base+(hash(n*7+c2*3+slot,13)-0.5)*0.12; }
-  // Faltet POPPAR upp fardigt, gront, och tonar sedan over till graft.
-  // Staplarna ar ordblock sa att raden last som text och inte som en matare.
-  function fld(c,x,y,w,h,p,t0,base,seed,right){
-    if(p<=t0) return;
-    var d=p-t0;
-    var a=clamp01(d/0.020);                       // snabb intoning
-    var s=lerp(1.16,1,easeOut(clamp01(d/0.055))); // liten overskjutning
-    var fade=clamp01((d-0.05)/0.24);              // gron -> graft
-    var col='rgba('+Math.round(lerp(21,28,fade))+','+Math.round(lerp(115,27,fade))+','
-      +Math.round(lerp(90,25,fade))+','+(lerp(0.88,base,fade)*a).toFixed(3)+')';
-    var cy=y+h/2;
-    c.save();
-    c.translate(right?x+w:x,cy); c.scale(s,s); c.translate(right?-(x+w):-x,-cy);
-    var gap=Math.max(1.5,h*0.42), pos=0, k=0;
-    while(pos<w-0.5&&k<16){
-      var ww=Math.min(w-pos,h*(1.5+2.8*hash(seed+k*13,17)));
-      bar(c,x+pos,y,ww,h,col);
-      pos+=ww+gap; k++;
-    }
-    c.restore();
-  }
-
-  function drawShop(t,arrive){
-    var ch=br.chrome;
-    ctx.save();
-    ctx.shadowColor='rgba(40,34,26,.20)'; ctx.shadowBlur=30; ctx.shadowOffsetY=12;
-    rr(ctx,br.x,br.y,br.w,br.h,10); ctx.fillStyle='#FFFFFF'; ctx.fill();
-    ctx.restore();
-
-    ctx.save();
-    rr(ctx,br.x,br.y,br.w,br.h,10); ctx.clip();
-    ctx.fillStyle='#EFEEEB'; ctx.fillRect(br.x,br.y,br.w,ch);
-    for(var i=0;i<3;i++){
-      ctx.beginPath(); ctx.arc(br.x+10+i*8,br.y+ch/2,2.2,0,6.2832);
-      ctx.fillStyle='#D6D4CF'; ctx.fill();
-    }
-    rr(ctx,br.x+38,br.y+ch*0.24,br.w-52,ch*0.52,ch*0.26);
-    ctx.fillStyle='#FFFFFF'; ctx.fill();
-    T(ctx,'www...',br.x+46,br.y+ch*0.70,Math.min(7,ch*0.42),'',ink(.34),'left',MONO);
-
-    var cx=br.x, cy=br.y+ch, cw=br.w, chh=br.h-ch;
-    ctx.save();
-    ctx.beginPath(); ctx.rect(cx,cy,cw,chh); ctx.clip();
-    ctx.translate(cx,cy); ctx.scale(scale,scale);
-
-    var headU=30, pad=16, gap=13;
-    var cardW=(DESIGN-pad*2-gap*(cols-1))/cols;
-    var imgH=cardW*0.58;
-    var cardH=imgH+46;
-    var rowH=cardH+17;
-
-    // varje kolumn scrollar i sin egen takt, som dessutom varierar langsamt.
-    // sc ar integralen av farten, sa rorelsen blir alltid framat.
-    var MULT=[1.00,0.72,1.21], AMP=[0.20,0.32,0.15], WOB=[0.29,0.44,0.21];
-    for(var c2=0;c2<cols;c2++){
-      var m=MULT[c2%3], am=AMP[c2%3], wv=WOB[c2%3];
-      var sc=SCROLL*(m*t+am*(1-Math.cos(t*wv))/wv);
-      var x=pad+c2*(cardW+gap);
-      var first=Math.floor((sc-headU)/rowH)-1;
-      for(var n=first;n<first+Math.ceil(chU/rowH)+3;n++){
-        if(n<0) continue;
-        var y=headU+8+n*rowH-sc;
-        if(y>chU+4||y+cardH<headU-4) continue;
-        // p loper fran "hela kortet ar synligt nerifran" till "kortets topp nar
-        // sidhuvudet". Mattes fran kortets TOPP hann falten poppa medan de annu
-        // lag under nederkanten -- kortet kom in halvifyllt.
-        var p=clamp01((chU-cardH-y)/Math.max(1,chU-cardH-headU));
-
-        rr(ctx,x,y,cardW,cardH,5);
-        ctx.fillStyle='#FFFFFF'; ctx.fill();
-        ctx.strokeStyle=ink(.09); ctx.lineWidth=0.7; ctx.stroke();
-
-        // bild — ligger pa plats direkt, ingen ifyllningseffekt
-        var ix=x+7, iy=y+7, iw=cardW-14, seed=hash(n*3+c2,11);
-        ctx.save();
-        rr(ctx,ix,iy,iw,imgH,4); ctx.clip();
-        var ig=ctx.createLinearGradient(ix,iy,ix+iw,iy+imgH);
-        ig.addColorStop(0,'rgb('+Math.round(lerp(243,236,seed))+','
-          +Math.round(lerp(242,238,seed))+','+Math.round(lerp(238,232,seed))+')');
-        ig.addColorStop(1,'rgb(224,221,214)');
-        ctx.fillStyle=ig; ctx.fillRect(ix,iy,iw,imgH);
-        ctx.restore();
-        drawProduct(ctx,productKind(n,c2),ix+iw*0.14,iy+imgH*0.10,iw*0.72,imgH*0.80);
-
-        // tre falt till vanster, priset till hoger
-        var ty=y+imgH+13, sd=n*17+c2*5;
-        fld(ctx,ix,ty,    iw*0.36,4.5,p,thr(0.12,n,c2,1),0.26,sd);      // kategori
-        fld(ctx,ix,ty+10, iw*0.62,7,  p,thr(0.34,n,c2,2),0.74,sd+40);   // artikelnamn
-        fld(ctx,ix,ty+21, iw*0.44,4.5,p,thr(0.56,n,c2,3),0.32,sd+80);   // variant
-        fld(ctx,ix+iw*0.72,ty+8,iw*0.28,8.5,p,thr(0.76,n,c2,4),0.82,sd+120,true); // pris
-      }
-    }
-
-    // fast sidhuvud ovanpa
-    ctx.fillStyle='#FFFFFF'; ctx.fillRect(0,0,DESIGN,headU);
-    ctx.beginPath(); ctx.arc(pad+4,headU/2,4,0,6.2832); ctx.fillStyle=g('.85'); ctx.fill();
-    bar(ctx,pad+12,headU/2-3.5,38,7,ink(.22));
-    for(var nb=0;nb<3;nb++) bar(ctx,pad+66+nb*28,headU/2-2.5,20,5,ink(.12));
-    rr(ctx,DESIGN-pad-74,headU/2-6.5,60,13,6.5); ctx.fillStyle=ink(.05); ctx.fill();
-    ctx.beginPath(); ctx.arc(DESIGN-pad-4,headU/2,4,0,6.2832); ctx.fillStyle=ink(.18); ctx.fill();
-    ctx.strokeStyle=ink(.10); ctx.lineWidth=0.7;
-    ctx.beginPath(); ctx.moveTo(0,headU+0.35); ctx.lineTo(DESIGN,headU+0.35); ctx.stroke();
-    var tf=ctx.createLinearGradient(0,headU,0,headU+16);
-    tf.addColorStop(0,'rgba(255,255,255,.9)'); tf.addColorStop(1,'rgba(255,255,255,0)');
-    ctx.fillStyle=tf; ctx.fillRect(0,headU,DESIGN,16);
-    var bf=ctx.createLinearGradient(0,chU-20,0,chU);
-    bf.addColorStop(0,'rgba(255,255,255,0)'); bf.addColorStop(1,'rgba(255,255,255,.92)');
-    ctx.fillStyle=bf; ctx.fillRect(0,chU-20,DESIGN,20);
-    ctx.restore();
-
-    var pulse=Math.pow(Math.sin(arrive*Math.PI),6);
-    if(pulse>0.01){
-      var eg=ctx.createLinearGradient(br.x,0,br.x+br.w*0.16,0);
-      eg.addColorStop(0,g((0.16*pulse).toFixed(3))); eg.addColorStop(1,g('0'));
-      ctx.fillStyle=eg; ctx.fillRect(br.x,br.y+ch,br.w*0.16,br.h-ch);
-    }
-    ctx.restore();
-
-    rr(ctx,br.x+0.5,br.y+0.5,br.w-1,br.h-1,10);
-    ctx.strokeStyle=ink(.13); ctx.lineWidth=1; ctx.stroke();
-  }
-
-  // ---------- loop ----------
-  function frame(now){
-    var t=reduce?9.2:now/1000+9.2;
-    ctx.save();
-    ctx.translate(-OX,0);          // centrera den virtuella vyn, beskar kanterna
-    bg();
-    var states=[];
-    for(var i=0;i<SLOTS;i++) states.push(slotState(i,t));
-    drawExtraction(t,states);
-    states.slice().sort(function(a,b){return a.s-b.s;}).forEach(drawDoc);
-    drawBox(t);
-    var arrive=drawNode(t);
-    drawShop(t,arrive);
-    ctx.restore();
-    if(!reduce) requestAnimationFrame(frame);
-  }
-
-  addEventListener('resize',resize);
-  resize();
-  if(document.fonts&&document.fonts.ready) document.fonts.ready.then(resize);
-  requestAnimationFrame(frame);
-})();
-</script>
+<script src="/site.js?v=20261012b"></script>
+<script src="/hero.js?v=20261012b"></script>
 </body>
 </html>

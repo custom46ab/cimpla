@@ -21,8 +21,13 @@ export async function onRequestPost({ request, env }) {
       return new Response("ok", { status: 200 });
     }
 
-    const email = (form.get("email") || "").toString().trim();
-    const meddelande = (form.get("meddelande") || "").toString().trim();
+    const falt = (k, max) => (form.get(k) || "").toString().trim().slice(0, max);
+    const email = falt("email", 200);
+    const meddelande = falt("meddelande", 5000);
+    const namn = falt("namn", 200);
+    const foretag = falt("foretag", 200);
+    // "kontakt" = kontaktsidans formulär, annars bannerns intresseanmälan
+    const kontakt = falt("amne", 20) === "kontakt";
     if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
       return new Response("Ogiltig mejladress.", { status: 400 });
     }
@@ -51,12 +56,16 @@ export async function onRequestPost({ request, env }) {
 
     // 2) skicka mejlet. Avsändare = affärsbrevlådan; svar går till anmälaren.
     const text =
-      "Ny pilotanmälan från cimpla.se\n\n" +
+      (kontakt ? "Nytt meddelande via kontaktsidan på cimpla.se\n\n"
+               : "Ny intresseanmälan från cimpla.se\n\n") +
+      (namn ? "Namn: " + namn + "\n" : "") +
+      (foretag ? "Företag: " + foretag + "\n" : "") +
       "Mejl: " + email + "\n\n" +
       "Meddelande:\n" + (meddelande || "(inget)") + "\n";
     const payload = {
       message: {
-        subject: "Pilotanmälan cimpla: " + email,
+        subject: (kontakt ? "Kontakt cimpla: " : "Intresseanmälan cimpla: ") +
+                 (foretag ? foretag + " – " : "") + email,
         body: { contentType: "Text", content: text },
         toRecipients: [{ emailAddress: { address: env.NOTIFY_TO } }],
         replyTo: [{ emailAddress: { address: email } }],
