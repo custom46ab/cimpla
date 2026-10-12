@@ -9,7 +9,7 @@
 //   GRAPH_CLIENT_ID      app-registreringens id     (= Custom46_GRAPH_CLIENT_ID)
 //   GRAPH_CLIENT_SECRET  client secret  [SECRET]    (= Custom46_GRAPH_CLIENT_SECRET)
 //   GRAPH_SENDER         hugo.bodinson@custom46.com (avsändarbrevlåda appen når)
-//   NOTIFY_TO            kontakt@custom46.com        (dit anmälan skickas)
+//   NOTIFY_TO            info@cimpla.se               (dit anmälan skickas)
 
 export async function onRequestPost({ request, env }) {
   try {
