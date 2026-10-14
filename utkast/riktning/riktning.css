@@ -1,0 +1,253 @@
+/* utkast/riktning – ny riktning för startsidan (oktober 2026).
+   Laddas EFTER /styles.css och skriver bara över det som ändras:
+   vit + kall ljusgrå, grön som enda accent, små radier, mono-etiketter. */
+:root{
+  --card:#F5F6F4; --tint:#E9F1ED; --line:#E4E5E1; --muted:#64635E;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --radius:8px;
+}
+
+/* knappar: små radier i stället för piller */
+.btn{border-radius:6px;padding:14px 22px}
+.head-cta{padding:11px 18px}
+.ghost{border-radius:5px}
+
+/* typografi: större, lättare rubriker med mer luft */
+h1{font-size:clamp(42px,7vw,92px);line-height:.98;letter-spacing:-.02em;margin:0 0 26px}
+h2{font-size:clamp(32px,4.6vw,58px);line-height:1.02;letter-spacing:-.015em;margin:0 0 18px}
+h1 em,h2 em{color:var(--green)}
+.eyebrow{font-family:var(--mono);font-weight:500;font-size:12px;letter-spacing:.14em;margin:0 0 18px}
+.mono{font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.sec{padding:clamp(64px,9vw,128px) 0}
+.sec-alt{background:var(--card)}
+.sec-head{max-width:900px}
+
+/* ---------- hero ---------- */
+.band{margin-top:0}
+.r-hero{padding:clamp(16px,2.5vw,32px) 0 clamp(40px,5vw,64px)}
+.r-hero h1{max-width:1060px}
+.r-hero .lede{max-width:560px;font-size:clamp(18px,1.7vw,21px)}
+.hero-row{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:24px 48px}
+.r-hero .hero-actions{margin-top:0}
+
+/* ---------- bevis ---------- */
+.proof{display:grid;grid-template-columns:minmax(0,1.2fr) repeat(3,minmax(0,1fr));
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.proof>div{padding:28px 24px 26px;border-left:1px solid var(--line);min-width:0}
+.proof>div:first-child{border-left:0;padding-left:0}
+.proof .num{font-family:var(--serif);font-size:clamp(34px,3.6vw,48px);line-height:1;display:block;margin-bottom:10px}
+.proof p{margin:0;color:var(--muted);font-size:15px}
+.proof .who p{color:var(--ink);font-size:16px;margin-top:10px;max-width:30ch}
+@media (max-width:860px){
+  .proof{grid-template-columns:1fr 1fr}
+  .proof>div{border-left:0;border-top:1px solid var(--line);padding-left:0}
+  .proof .who{grid-column:1/-1;border-top:0}
+}
+
+/* ---------- problemet: tre spalter med hårlinjer ---------- */
+.trio{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--ink)}
+.trio>div{padding:22px 28px 0 0;min-width:0}
+.trio>div+div{padding-left:28px;border-left:1px solid var(--line)}
+.trio .mono{display:block;margin-bottom:28px}
+.trio h3{font-family:var(--serif);font-weight:400;font-size:26px;line-height:1.15;margin:0 0 10px}
+.trio p{color:var(--muted);margin:0}
+@media (max-width:860px){
+  .trio{grid-template-columns:1fr}
+  .trio>div,.trio>div+div{padding:22px 0 26px;border-left:0;border-top:1px solid var(--line)}
+  .trio>div:first-child{border-top:0}
+}
+
+/* ---------- flödet: scrollsekvens ---------- */
+/* Desktop: sektionen är 260vh, inre vyn sitter fast och stegen byts efter
+   scrollen. Mobil och reducerad rörelse: vanlig lista med alla steg. */
+.seq{position:relative;height:260vh;background:var(--card)}
+.seq-pin{position:sticky;top:var(--head,112px);height:calc(100vh - var(--head,112px));display:flex;align-items:center;overflow:hidden}
+.seq-grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:clamp(32px,6vw,96px);align-items:center;width:100%}
+.seq-steps{list-style:none;margin:0;padding:0;position:relative;min-height:260px}
+.seq-steps li{position:absolute;inset:0 0 auto 0;opacity:0;transform:translateY(18px);
+  transition:opacity .5s ease,transform .5s ease}
+.seq-steps li.on{opacity:1;transform:none}
+.seq-steps .n{font-family:var(--mono);font-size:12px;letter-spacing:.12em;color:var(--green);display:block;margin-bottom:18px}
+.seq-steps h3{font-family:var(--serif);font-weight:400;font-size:clamp(34px,4.4vw,60px);line-height:1.02;letter-spacing:-.015em;margin:0 0 16px}
+.seq-steps p{color:var(--muted);font-size:17px;max-width:40ch;margin:0}
+.seq-bar{display:flex;gap:6px;margin-top:36px}
+.seq-bar i{flex:1;height:2px;background:var(--line);position:relative;overflow:hidden}
+.seq-bar i::after{content:"";position:absolute;inset:0;background:var(--green);transform:scaleX(var(--p,0));transform-origin:left}
+.seq-stage{position:relative;aspect-ratio:6/5;max-width:100%}
+.seq-stage .panel{position:absolute;inset:0;opacity:0;transform:scale(.985);transition:opacity .5s ease,transform .5s ease}
+.seq-stage .panel.on{opacity:1;transform:none}
+.seq-head{margin-bottom:0}
+@media (max-width:860px),(prefers-reduced-motion:reduce){
+  .seq{height:auto;padding:clamp(64px,9vw,128px) 0}
+  .seq-pin{position:static;height:auto;display:block}
+  .seq-grid{display:block}
+  .seq-steps{min-height:0;display:flex;flex-direction:column;gap:56px}
+  .seq-steps li{position:static;opacity:1;transform:none}
+  .seq-steps li .panel{display:block}
+  .seq-bar,.seq-stage{display:none}
+}
+/* mobil: varje steg får sin bild direkt under texten */
+.seq-steps .mini{display:none;margin-top:22px}
+@media (max-width:860px),(prefers-reduced-motion:reduce){ .seq-steps .mini{display:block} }
+
+/* gemensamt för bilderna i sekvensen och demon */
+.sheet{background:#fff;border:1px solid var(--line);border-radius:6px;box-shadow:0 18px 40px rgba(28,27,25,.07);
+  padding:22px;height:100%;display:flex;flex-direction:column;gap:12px;overflow:hidden}
+.mini .sheet{height:auto}
+.badge{align-self:flex-start;font-family:var(--mono);font-size:10.5px;font-weight:500;letter-spacing:.08em;
+  padding:4px 7px;border-radius:3px;background:#F6E7E4;color:#A2422F}
+.badge.xls{background:#E3F0E8;color:#1B6E46}
+.ln{height:7px;border-radius:2px;background:#E9E8E4}
+.ln.t{height:11px;background:#D9D7D2;width:55%}
+.row{display:grid;grid-template-columns:1.1fr 2.2fr .6fr .9fr;gap:10px;align-items:center;
+  font-family:var(--mono);font-size:12px;color:var(--muted);padding:7px 8px;border-radius:4px;min-width:0}
+.row>span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row.hl{background:var(--tint);color:var(--ink);box-shadow:inset 0 0 0 1px rgba(21,115,90,.35)}
+.row.head{color:var(--ink);font-weight:500;border-bottom:1px solid var(--line);border-radius:0}
+.fields{display:flex;flex-wrap:wrap;gap:8px;margin-top:auto}
+.fields span{font-family:var(--mono);font-size:12px;background:var(--tint);color:var(--green);padding:6px 9px;border-radius:4px}
+.fields b{font-weight:500;color:var(--ink);margin-left:6px}
+.arrow-down{font-family:var(--mono);font-size:12px;color:var(--green);text-align:center}
+.tagrow{display:grid;grid-template-columns:110px 1fr;gap:6px 14px;font-size:14px;align-items:baseline}
+.tagrow .mono{font-size:11px}
+.out{width:100%;border-collapse:collapse;font-size:12.5px}
+.out th{font-family:var(--mono);font-weight:500;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:left;padding:7px 8px;border-bottom:1px solid var(--line)}
+.out td{padding:8px;border-bottom:1px solid var(--line);white-space:nowrap}
+.out td.num{text-align:right;font-variant-numeric:tabular-nums}
+.ok{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--green);font-weight:500;margin-top:auto}
+.ok::before{content:"";width:18px;height:18px;border-radius:50%;background:var(--green) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center/11px no-repeat}
+.scroll-x{overflow-x:auto}
+
+/* ---------- testa själv ---------- */
+.demo{display:grid;grid-template-columns:minmax(0,4fr) minmax(0,7fr);gap:clamp(28px,4vw,56px);align-items:start}
+@media (max-width:860px){ .demo{grid-template-columns:1fr} }
+.picks{display:flex;flex-direction:column;gap:10px;margin:26px 0 22px}
+.pick{display:flex;align-items:center;gap:14px;text-align:left;font:inherit;cursor:pointer;
+  background:#fff;border:1px solid var(--line);border-radius:6px;padding:14px 16px;color:var(--ink);transition:border-color .15s}
+.pick:hover{border-color:rgba(28,27,25,.35)}
+.pick[aria-pressed="true"]{border-color:var(--green);box-shadow:inset 0 0 0 1px var(--green)}
+.pick .badge{flex:none}
+.pick small{display:block;color:var(--muted);font-size:13.5px}
+.demo-out{background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.demo-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.demo-bar .mono{font-size:11px}
+.demo-status{font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--muted)}
+.demo-status.done{color:var(--green)}
+.demo-out .out tbody tr{opacity:0;transform:translateY(4px);transition:opacity .35s ease,transform .35s ease}
+.demo-out .out tbody tr.in{opacity:1;transform:none}
+.demo-out .out td.fill{color:var(--green)}
+.demo-note{font-size:13px;color:var(--muted);margin-top:12px}
+
+/* ---------- pricats ---------- */
+.pricats{list-style:none;margin:0;padding:0;border-top:1px solid var(--ink)}
+.pricats li{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:18px;align-items:center;
+  padding:15px 0;border-bottom:1px solid var(--line);font-size:15px}
+.pricats li>*{min-width:0}
+.pricats .mono{font-size:11px}
+.pill{font-family:var(--mono);font-size:11px;padding:4px 8px;border-radius:4px;background:var(--tint);color:var(--green);white-space:nowrap}
+.pill.new{background:#fff;color:var(--muted);box-shadow:inset 0 0 0 1px var(--line)}
+
+/* ---------- case: sidans enda mörka element ---------- */
+.case{background:var(--ink);color:#fff;border-radius:10px;overflow:hidden;
+  display:grid;grid-template-columns:minmax(0,7fr) minmax(0,4fr)}
+.case-q{padding:clamp(32px,5vw,72px)}
+.case-q blockquote{margin:0 0 28px;font-family:var(--serif);font-size:clamp(28px,3.4vw,44px);line-height:1.12}
+.case-q .mono{color:rgba(255,255,255,.55)}
+.case-q .todo{display:inline-block;margin-top:14px;font-family:var(--mono);font-size:11px;letter-spacing:.06em;
+  color:#E8C27A;border:1px dashed rgba(232,194,122,.6);padding:5px 8px;border-radius:4px}
+.case-n{border-left:1px solid rgba(255,255,255,.12);display:flex;flex-direction:column}
+.case-n>div{padding:clamp(24px,3vw,40px);border-top:1px solid rgba(255,255,255,.12);flex:1;display:flex;flex-direction:column;justify-content:flex-end}
+.case-n>div:first-child{border-top:0}
+.case-n .num{font-family:var(--serif);font-size:clamp(40px,4.4vw,60px);line-height:1;color:var(--mint)}
+.case-n p{margin:8px 0 0;color:rgba(255,255,255,.72);font-size:15px}
+@media (max-width:860px){ .case{grid-template-columns:1fr} .case-n{border-left:0;border-top:1px solid rgba(255,255,255,.12)} }
+
+/* ---------- avslut: den enda stora gröna ytan ---------- */
+.r-cta{background:var(--green);color:#fff;border-radius:10px;padding:clamp(40px,6vw,88px);
+  display:grid;grid-template-columns:minmax(0,1.5fr) auto;gap:28px 48px;align-items:end}
+.r-cta h2{color:#fff;margin:0 0 12px}
+.r-cta h2 em{color:#CFEBDF}
+.r-cta p{color:rgba(255,255,255,.8);margin:0;max-width:520px}
+.r-cta .btn-light:hover{background:#fff}
+@media (max-width:860px){ .r-cta{grid-template-columns:1fr} }
+
+/* utkastmarkering */
+.draft-flag{position:fixed;right:14px;bottom:14px;z-index:30;font-family:var(--mono);font-size:11px;letter-spacing:.08em;
+  background:var(--ink);color:#fff;padding:7px 10px;border-radius:5px;text-decoration:none}
+.draft-flag:hover{color:#fff;background:#000}
+
+/* ---------- foton (Unsplash, länkade direkt i utkastet) ---------- */
+.ph{margin:0;position:relative;border-radius:8px;overflow:hidden;background:var(--card);aspect-ratio:var(--ar,4/3);max-width:100%}
+.ph img{display:block;width:100%;height:100%;object-fit:cover}
+.ph figcaption{position:absolute;right:8px;bottom:8px;font-family:var(--mono);font-size:10px;letter-spacing:.04em;
+  color:rgba(255,255,255,.88);background:rgba(28,27,25,.38);padding:3px 6px;border-radius:3px}
+.ph-band{--ar:21/8}
+@media (max-width:700px){ .ph-band{--ar:4/3} }
+
+/* undersidornas sidhuvud: text + foto */
+.ph-split{display:grid;grid-template-columns:minmax(0,6fr) minmax(0,5fr);gap:clamp(28px,5vw,72px);align-items:end}
+.ph-split .ph{--ar:5/4}
+@media (max-width:860px){ .ph-split{grid-template-columns:1fr} .ph-split .ph{--ar:16/10} }
+.page-hero{border-bottom:0;padding-bottom:clamp(24px,4vw,48px)}
+
+/* case med foto överst */
+.case .case-ph{grid-column:1/-1;border-radius:0;--ar:21/7}
+@media (max-width:860px){ .case .case-ph{--ar:16/9} }
+
+/* ---------- undersidornas komponenter i samma uttryck ---------- */
+.card{background:transparent;border-radius:0;padding:22px 0 0;border-top:1px solid var(--ink)}
+.sec-alt .card{background:transparent}
+.card h3{font-family:var(--serif);font-weight:400;font-size:24px;line-height:1.15}
+.icon{background:transparent;width:auto;height:auto;border-radius:0;margin-bottom:14px}
+.grid.g2,.grid.g3{gap:28px 40px}
+.stat{background:transparent;border-radius:0;border-top:1px solid var(--line);padding:22px 0 0}
+.step-num{border-radius:0;background:transparent;color:var(--green);font-family:var(--mono);width:auto;height:auto;font-weight:500}
+.chips li{border-radius:4px;font-family:var(--mono);font-size:12.5px}
+.flow-box{border-radius:8px}
+.timeline li::before{border-radius:4px;font-family:var(--mono);font-weight:500;font-size:14px}
+.contact-card{background:transparent;border-radius:0;padding:20px 0 4px;border-top:1px solid var(--line);margin-bottom:8px}
+.form-card{border-radius:8px}
+.field input,.field textarea{border-radius:5px}
+.cta{background:var(--green);border-radius:10px}
+.cta h2 em{color:#CFEBDF}
+.cta p{color:rgba(255,255,255,.8)}
+.cta .btn-light:hover{background:#fff}
+.faq summary{font-size:18px}
+dialog{border-radius:10px}
+.photo-credits{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:10px}
+
+/* ---------- pricat-databasen som illustration ---------- */
+.pdb{background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:0 18px 40px rgba(28,27,25,.06);overflow:hidden}
+.pdb-bar{display:flex;align-items:center;gap:14px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.pdb-bar .mono{font-size:11px}
+.pdb-sok{flex:1;min-width:0;font-size:13px;color:var(--muted);background:var(--card);border-radius:5px;padding:6px 10px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pdb-tot{font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap}
+.pdb-tot b{color:var(--ink);font-weight:500}
+.pdb-grid{list-style:none;margin:0;padding:14px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.pt{border:1px solid var(--line);border-radius:6px;padding:11px 12px;display:flex;flex-direction:column;gap:7px;min-width:0;
+  transition:border-color .4s ease,box-shadow .4s ease,transform .4s ease}
+.pt-top{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.pt-top .mono{font-size:10.5px}
+.pt .ln.t{width:70%;height:8px}
+.pt-cat{font-size:14px;font-weight:500}
+.pt-n{font-family:var(--mono);font-size:10.5px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.pt-n i{width:6px;height:6px;border-radius:50%;background:var(--green);opacity:.55}
+.badge.csv{background:#E8EEF6;color:#36577F}
+.pt.ny{border-color:var(--green);box-shadow:0 0 0 3px rgba(21,115,90,.12);transform:translateY(-2px)}
+.pt.ny .pt-n{color:var(--green)}
+.pt.ny .pt-n i{opacity:1}
+.pt-add{border-style:dashed;justify-content:center;align-items:flex-start;color:var(--muted);font-size:13px}
+.pt-add span{font-family:var(--mono);font-size:18px;color:var(--green);line-height:1}
+@media (max-width:560px){ .pdb-grid{grid-template-columns:repeat(2,minmax(0,1fr))} .pdb-sok{display:none} }
+
+/* kortrutnät (produkt, kom igång) i samma uttryck som startsidans spalter:
+   inga ikoner, hårlinjer mellan spalterna, svart linje överst */
+.grid.g2,.grid.g3{gap:0}
+.grid .card{border-top:1px solid var(--ink);padding:22px 32px 30px 0}
+.grid .card .icon{display:none}
+.grid .card h3{font-size:26px;margin-bottom:10px}
+.grid.g2 .card:nth-child(2n),.grid.g3 .card+.card{padding-left:32px;border-left:1px solid var(--line)}
+.grid.g2 .card:nth-child(n+3){border-top-color:var(--line)}
+@media (max-width:860px){ .grid.g3 .card+.card{padding-left:0;border-left:0;border-top-color:var(--line)} }
+@media (max-width:640px){ .grid.g2 .card:nth-child(2n){padding-left:0;border-left:0} .grid.g2 .card+.card{border-top-color:var(--line)} }
