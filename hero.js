@@ -4,9 +4,10 @@
   var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // ---------- installningar ----------
-  var DOC_SET=[0,1,2,3,4];   // vilka dokumenttyper som roterar i vanstra flodet
-  var CYCLE=5.6;             // sekunder per dokument i en slot
-  var SLOTS=4;               // antal dokumentplatser i vanstra flodet
+  var DOC_SET=[0,1,2,3,4];   // vilka dokumenttyper som faller i vanstra flodet
+  var FALL=3.8;              // sekunder for ett dokument (inkl. mellanrum) att falla en plats
+  var GAP=0.30;              // mellanrum mellan dokumenten, andel av dokumenthojden/-bredden
+  var BREATH=3.6;            // sekunder per andetag i cimpla-boxen
   var SCROLL=38;             // e-handelsvyns scrollfart, designenheter per sekund
   var DESIGN=430;            // e-handelsvyns designbredd i enheter
 
@@ -17,6 +18,7 @@
   function lerp(a,b,t){return a+(b-a)*t;}
   function clamp01(t){return t<0?0:t>1?1:t;}
   function easeOut(t){return 1-Math.pow(1-t,3);}
+  function smooth(t){t=clamp01(t);return t*t*(3-2*t);}
   function hash(n,s){var x=Math.sin(n*127.1+s*311.7)*43758.5453;return x-Math.floor(x);}
   function g(a){return 'rgba(21,115,90,'+a+')';}
   function ink(a){return 'rgba(28,27,25,'+a+')';}
@@ -38,7 +40,7 @@
     return {x:a*x0+b*x1+c*x2+d*x3, y:a*y0+b*y1+c*y2+d*y3};
   }
 
-  var W,H,DPR,VW,OX,docCX,docH,docSX,docSY,box,br,scale,chU,cols;
+  var W,H,DPR,VW,OX,docCX,docH,docCols,box,br,scale,chU,cols;
 
   // ---------- dokumenttyper (vanstra flodet) ----------
   // Abstrakta ark, ingen lasbar text. Badgen ar det enda som namnger formatet.
@@ -319,14 +321,15 @@
     var sq=VPULL*t, cx=VW/2;
     function pull(x){ return cx+(x-cx)*(1-sq); }
 
-    docH  = H*0.36;
-    docCX = pull(VW*0.165);
-    docSX = VW*0.080*(1-sq);   // hur brett dokumenten sprids i sidled
-    docSY = H*0.24;            // ... och i hojdled
+    docH  = Math.min(H*0.40, VW*0.135);
+    docCX = pull(VW*0.215);
+    // tva kolumner; avstandet = referensbredden (staende ark) + GAP av den
+    var sep=docH*0.80*(1+GAP);
+    docCols=[docCX-sep/2, docCX+sep/2];
     var bw=VW*0.115, bh=H*0.20;
-    box={w:bw,h:bh,x:pull(VW*0.457)-bw/2,y:(H-bh)/2};
-    var brw=VW*0.400, brh=H*0.84;
-    br={x:pull(VW-brw/2-VW*0.012)-brw/2, y:(H-brh)/2, w:brw, h:brh,
+    box={w:bw,h:bh,x:pull(VW*0.50)-bw/2,y:(H-bh)/2};
+    var brw=VW*0.32, brh=H*0.84;
+    br={x:pull(VW-brw/2-VW*0.025)-brw/2, y:(H-brh)/2, w:brw, h:brh,
         chrome:Math.max(15,brh*0.062)};
     scale=br.w/DESIGN;
     chU=(br.h-br.chrome)/scale;
@@ -350,28 +353,35 @@
     ctx.fillStyle=g2; ctx.fillRect(0,0,VW,H);
   }
 
-  // ---------- vanster: dokumentens livscykel ----------
-  // u 0..1: 0-.20 poppar upp, .20-.74 varden extraheras, .74-1 krymper bort
-  // Varje plats har EGEN periodlangd, inte bara egen fas -- med samma period
-  // foljde dokumenten varandra i jamn takt for alltid. Olika perioder gor att
-  // de driver isar och aldrig gar i takt.
-  var PER=[1.00,1.31,0.84,1.15], OFF=[0.00,0.41,0.73,0.22];
-  function slotState(i,t){
-    var raw=t/(CYCLE*PER[i%4]) + OFF[i%4];
-    var u=raw-Math.floor(raw), lap=Math.floor(raw);
-    var idx=((i+lap*SLOTS)%DOC_SET.length+DOC_SET.length)%DOC_SET.length;
-    var def=DOCS[DOC_SET[idx]], seed=i*31+lap*7;
-    var inn=clamp01(u/0.20), out=clamp01((u-0.74)/0.26);
-    var s=lerp(0.52,1,easeOut(inn))*lerp(1,0.46,out*out);
-    return {
-      def:def, u:u, s:s, seed:seed,
-      a:Math.min(clamp01(u/0.10),1-out),
-      x:docCX+(hash(seed,1)-0.5)*2*docSX,
-      y:H*0.5+(hash(seed,2)-0.5)*2*docSY+Math.sin(t*0.5+i*2)*3,
-      rot:(hash(seed,3)-0.5)*0.13*(1-inn*0.6),
-      ex:clamp01((u-0.20)/0.10)*(1-clamp01((u-0.70)/0.06)),
-      lift:lerp(16,0,easeOut(inn))
-    };
+  // ---------- vanster: fallande dokument i tva kolumner ----------
+  // Varje kolumn ar ett band av dokument som faller nedat i jamn takt, med GAP
+  // av dokumenthojden mellan dem. Kolumnerna faller i lite olika fart och ar
+  // forskjutna en halv plats, sa de aldrig gar i takt. Varden extraheras medan
+  // arket passerar mitten av bandet.
+  var COLSPEED=[1.00,0.84], COLOFF=[0.00,0.50];
+  function docStates(t){
+    var out=[], pitch=docH*(1+GAP), L=DOC_SET.length;
+    var speed=pitch/FALL;
+    for(var c=0;c<2;c++){
+      var sc=t*speed*COLSPEED[c]+COLOFF[c]*pitch;
+      var nLo=Math.ceil((sc-H-docH)/pitch), nHi=Math.floor((sc+docH)/pitch);
+      for(var n=nLo;n<=nHi;n++){
+        // steget 2 ar relativt primt med 5: tva ark i rad ar aldrig samma typ
+        var def=DOCS[DOC_SET[((n*2+c*3)%L+L)%L]], seed=n*13+c*7;
+        var hh=docH*def.fit, y=sc-n*pitch;
+        var q=(y+hh/2)/(H+hh);                 // 0 ovanfor bandet, 1 under
+        var a=smooth(q/0.12)*smooth((1-q)/0.12);
+        if(a<=0.01) continue;
+        out.push({
+          def:def, s:1, seed:seed, a:a, lift:0,
+          x:docCols[c]+(hash(seed,1)-0.5)*docH*0.08+Math.sin(t*0.4+n*1.3)*docH*0.012,
+          y:y,
+          rot:(hash(seed,3)-0.5)*0.07+Math.sin(t*0.5+n*1.7)*0.012,
+          ex:smooth((q-0.22)/0.16)*(1-smooth((q-0.62)/0.14))
+        });
+      }
+    }
+    return out;
   }
 
   function drawDoc(st){
@@ -437,7 +447,7 @@
         ctx.bezierCurveTo(x1,y0,x2,y3,bx-1,y3); ctx.stroke();
         ctx.restore();
         for(var d=0;d<2;d++){
-          var pp=(t*0.42+i*0.31+d*0.5+s*0.17)%1;
+          var pp=(t*0.42+i*0.31+d*0.5+st.seed*0.17)%1;
           var pt=bez(pp,x0,y0,x1,y0,x2,y3,bx-1,y3);
           var fade=Math.sin(pp*Math.PI);
           ctx.fillStyle=g((0.85*fade*pop*st.a).toFixed(3));
@@ -458,54 +468,81 @@
     0.14517,-0.12287,0.01803, 0.20445,-0.02357,0.02357, 0.31711,-0.05226,0.02911, 0.44029,-0.04129,0.03464
   ];
   var SYMC=[[74,107,98,0.22],[56,109,95,0.48],[38,112,92,0.74],[21,115,90,1.0]];
-  function drawSymbol(x0,y0,S,ga){
+  // En ljusvag gar genom prickarna fran vanster till hoger (samma riktning som
+  // flodet): prickarna lyser upp mot en ljusare mintgron och vaxer en aning.
+  var MINT=[46,178,134];
+  function drawSymbol(x0,y0,S,t){
     for(var i=0;i<16;i++){
       var nx=SYMD[i*3], ny=SYMD[i*3+1], nr=SYMD[i*3+2], c=SYMC[i%4];
-      var px=x0+nx/0.47493*S, py=y0+(ny+0.50781)/0.50781*S, r=nr/0.50781*S;
+      var xn=nx/0.47493;
+      var w=smooth(0.5-0.5*Math.cos(t*6.2832/BREATH*1.5-xn*4.2));
+      var px=x0+xn*S, py=y0+(ny+0.50781)/0.50781*S, r=nr/0.50781*S*(1+0.12*w);
+      var m=0.65*w, al=lerp(c[3],Math.min(1,c[3]+0.40),w);
       ctx.beginPath(); ctx.arc(px,py,r,0,6.2832);
-      ctx.fillStyle='rgba('+c[0]+','+c[1]+','+c[2]+','+(c[3]*ga).toFixed(3)+')'; ctx.fill();
+      ctx.fillStyle='rgba('+Math.round(lerp(c[0],MINT[0],m))+','+Math.round(lerp(c[1],MINT[1],m))+','
+        +Math.round(lerp(c[2],MINT[2],m))+','+al.toFixed(3)+')';
+      ctx.fill();
     }
   }
 
   function drawBox(t){
     if(box.w<20||box.h<12) return;   // innan canvasen fatt storlek: rita inget
+    // Andningen: en mjuk cosinus, inga harda blinkningar. Den styr glorian,
+    // skuggan, kantens farg och punkten efter ordmarket.
+    var ph=t/BREATH, b=0.5-0.5*Math.cos(ph*6.2832);
+    var cx=box.x+box.w/2, cy=box.y+box.h/2;
+    function grn(a){ return 'rgba('+Math.round(lerp(28,21,b))+','+Math.round(lerp(27,115,b))+','
+      +Math.round(lerp(25,90,b))+','+a.toFixed(3)+')'; }
+
+    // gloria bakom boxen
+    var R=Math.max(box.w,box.h)*(0.95+0.22*b);
+    var gl=ctx.createRadialGradient(cx,cy,0,cx,cy,R);
+    gl.addColorStop(0,'rgba(46,178,134,'+(0.10+0.12*b).toFixed(3)+')');
+    gl.addColorStop(0.55,'rgba(21,115,90,'+(0.04+0.06*b).toFixed(3)+')');
+    gl.addColorStop(1,'rgba(21,115,90,0)');
+    ctx.fillStyle=gl; ctx.fillRect(cx-R,cy-R,R*2,R*2);
+
+    // krusningar som vidgas fran kanten, tva per andetag
+    for(var k=0;k<2;k++){
+      var rp=(ph+k*0.5)%1, sp=easeOut(rp)*Math.max(14,box.h*0.32);
+      var ra=0.30*Math.pow(1-rp,2)*smooth(rp/0.08);
+      if(ra<0.005) continue;
+      rr(ctx,box.x-sp,box.y-sp,box.w+sp*2,box.h+sp*2,9+sp);
+      ctx.strokeStyle='rgba(46,178,134,'+ra.toFixed(3)+')'; ctx.lineWidth=1.2; ctx.stroke();
+    }
+
     ctx.save();
-    ctx.shadowColor='rgba(40,34,26,.16)'; ctx.shadowBlur=24; ctx.shadowOffsetY=10;
+    ctx.shadowColor='rgba(21,115,90,'+(0.12+0.12*b).toFixed(3)+')';
+    ctx.shadowBlur=22+12*b; ctx.shadowOffsetY=8;
     rr(ctx,box.x,box.y,box.w,box.h,9); ctx.fillStyle='#FFFFFF'; ctx.fill();
     ctx.restore();
     rr(ctx,box.x+0.5,box.y+0.5,box.w-1,box.h-1,9);
-    ctx.strokeStyle=ink(.14); ctx.lineWidth=1; ctx.stroke();
+    ctx.strokeStyle=grn(lerp(0.14,0.40,b)); ctx.lineWidth=1; ctx.stroke();
 
-    // I boxen star hela loggan: symbolen + ordmarket, pulserande. Punkten i
-    // samma farg som texten (inte gron), vilande PA baslinjen - satt som loggan.
+    // I boxen star hela loggan: symbolen + ordmarket. Punkten vilar PA
+    // baslinjen som i loggan och glider mot gront i takt med andningen.
     var pad=Math.max(6,box.w*0.09), avail=box.w-pad*2;
     ctx.font='400 10px '+SERIF;
     var u10=ctx.measureText('cimpla').width||26, ur=u10/10;
     var gap=0.34, symW=0.935, dotSp=0.289;                 // i enheter av fs
     var fs=Math.min(box.h*0.46, avail/(symW+gap+ur+dotSp));
-    var puls=0.5+0.5*Math.sin(t*2.0);
     var dr=Math.max(1.2,fs*0.085);
     ctx.font='400 '+fs.toFixed(2)+'px '+SERIF;
     var tw=ctx.measureText('cimpla').width;
     var total=fs*symW+fs*gap+tw+dr*3.4;
-    var startX=box.x+(box.w-total)/2, cy=box.y+box.h/2;
+    var startX=box.x+(box.w-total)/2;
     var by=cy+fs*0.34;
-    var a=0.26+0.74*puls, sc=0.975+0.05*puls;
-    ctx.save();
-    ctx.translate(box.x+box.w/2,cy);
-    ctx.scale(sc,sc);
-    ctx.translate(-(box.x+box.w/2),-cy);
-    drawSymbol(startX, cy-fs/2, fs, a);
+    drawSymbol(startX, cy-fs/2, fs, t);
     var tx=startX+fs*symW+fs*gap;
-    T(ctx,'cimpla',tx,by,fs,'400',ink(a.toFixed(3)),'left',SERIF);
-    ctx.beginPath(); ctx.arc(tx+tw+dr*1.7,by-dr*0.95,dr,0,6.2832);
-    ctx.fillStyle=ink(a.toFixed(3)); ctx.fill();
-    ctx.restore();
+    T(ctx,'cimpla',tx,by,fs,'400',ink(.90),'left',SERIF);
+    ctx.beginPath(); ctx.arc(tx+tw+dr*1.7,by-dr*0.95,dr*(1+0.15*b),0,6.2832);
+    ctx.fillStyle=grn(0.92); ctx.fill();
   }
 
   // ---------- pulserande nod: box -> e-handelsvy ----------
   function drawNode(t){
-    var x0=box.x+box.w, y0=box.y+box.h/2, x3=br.x, y3=br.y+br.h*0.42;
+    // rak linje: samma hojd i bada andar (boxens mitt)
+    var x0=box.x+box.w, y0=box.y+box.h/2, x3=br.x, y3=y0;
     var x1=lerp(x0,x3,0.45), x2=lerp(x0,x3,0.6);
     ctx.save();
     ctx.setLineDash([2.5,7]); ctx.lineDashOffset=-(t*70);
@@ -652,10 +689,9 @@
     ctx.save();
     ctx.translate(-OX,0);          // centrera den virtuella vyn, beskar kanterna
     bg();
-    var states=[];
-    for(var i=0;i<SLOTS;i++) states.push(slotState(i,t));
+    var states=docStates(t);
     drawExtraction(t,states);
-    states.slice().sort(function(a,b){return a.s-b.s;}).forEach(drawDoc);
+    states.forEach(drawDoc);
     drawBox(t);
     var arrive=drawNode(t);
     drawShop(t,arrive);

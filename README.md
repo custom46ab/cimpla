@@ -34,10 +34,15 @@ annars ser besökare den gamla versionen i upp till fyra timmar.
 Tre zoner som visar ett flöde från vänster till höger:
 
 1. **Vänster** – dokument i olika format (PDF, kalkylblad, textdokument, skannat
-   ark, chatt) poppar upp, får värden markerade och krymper bort igen. Innehållet
-   är avsiktligt abstrakt; bara formatbadgen namnger dokumentet.
-2. **Mitten** – insamlingsboxen. Pulserande streck bär värden dit från varje
-   dokument, och en fyllnadsfront vandrar nedåt i boxen.
+   ark, chatt) faller nedåt i två kolumner, med 30 % mellanrum (`GAP`) mellan
+   arken i höjd och mellan kolumnerna. Kolumnerna faller i lite olika fart och
+   är förskjutna en halv plats. Medan ett ark passerar mitten av bandet markeras
+   värden på det och strömmar till boxen. Innehållet är avsiktligt abstrakt;
+   bara formatbadgen namnger dokumentet.
+2. **Mitten** – cimpla-boxen. Pulserande streck bär värden dit från varje
+   dokument. Boxen andas mjukt (`BREATH`): en grön gloria, krusningar från
+   kanten, kanten och punkten efter ordmärket glider mot grönt, och en ljusvåg
+   går genom symbolens prickar från vänster till höger.
 3. **Höger** – en e-handelsvy som långsamt scrollar, kolumn för kolumn i olika
    takt. Produktbilden ligger på plats direkt; motivet är en av arton enkla
    streckfigurer (`drawProduct`) och väljs med `productKind()`, som steppar med
@@ -47,11 +52,12 @@ Tre zoner som visar ett flöde från vänster till höger:
    färdiga ett i taget på vägen upp, gröna i samma ögonblick de dyker upp och
    tonar sedan över till grafit.
 
-Reglage längst upp i skriptet i `index.html`:
+Reglage längst upp i `hero.js`:
 
-- `DOC_SET` – vilka dokumenttyper som roterar. Korta ned listan för att välja
+- `DOC_SET` – vilka dokumenttyper som faller. Korta ned listan för att välja
   bort någon.
-- `CYCLE` – sekunder per dokument i en slot. `SLOTS` – antal dokumentplatser.
+- `FALL` – sekunder för ett dokument att falla en plats. `GAP` – mellanrummet.
+- `BREATH` – sekunder per andetag i cimpla-boxen.
 - `SCROLL` – e-handelsvyns scrollfart. `DESIGN` – dess designbredd; högre värde
   ger mindre, tätare produktkort.
 
