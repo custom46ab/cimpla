@@ -21,7 +21,7 @@
 <link rel="preload" href="/fonts/InstrumentSerif-400-normal-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/IBMPlexSans-400-normal-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/fonts.css">
-<link rel="stylesheet" href="/styles.css?v=20261012c">
+<link rel="stylesheet" href="/styles.css?v=20261023b">
 </head>
 <body>
 <a class="skip" href="#main">Hoppa till innehållet</a>
@@ -51,7 +51,7 @@
 </header>
 
 <main id="main">
-  <section class="page-hero">
+  <section class="page-hero page-hero-compact">
     <div class="wrap">
       <span class="eyebrow">Kontakt</span>
       <h1>Hör av er, så <em>tar vi det därifrån</em>.</h1>
@@ -59,7 +59,7 @@
     </div>
   </section>
 
-  <section class="sec">
+  <section class="sec sec-contact">
     <div class="wrap contact-grid">
       <div>
         <div class="contact-card">
@@ -74,15 +74,11 @@
           <p>Frågor om cimpla, piloter eller samarbeten.</p>
           <a class="big" href="mailto:info@cimpla.se">info@cimpla.se</a>
         </div>
-        <div class="contact-card">
-          <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V5a1.5 1.5 0 011.5-1.5h7A1.5 1.5 0 0115 5v16"/><path d="M15 10h3.5A1.5 1.5 0 0120 11.5V21M3.5 21h17M8.5 8h3M8.5 12h3M8.5 16h3"/></svg></span>
-          <h3>Företaget</h3>
-          <p style="margin:0">cimpla är en produkt från custom46 AB.</p>
-        </div>
+        <p class="contact-note">cimpla är en produkt från custom46 AB.</p>
       </div>
 
       <div class="form-card">
-        <h2 style="font-size:32px">Skicka ett meddelande</h2>
+        <h2 style="font-size:28px">Skicka ett meddelande</h2>
         <p class="muted">Berätta kort om er, så återkommer vi.</p>
         <form id="contactForm" method="POST" action="/pilot" novalidate>
           <input type="hidden" name="amne" value="kontakt">
@@ -103,7 +99,7 @@
           </div>
           <div class="field">
             <label for="c-meddelande">Meddelande</label>
-            <textarea id="c-meddelande" name="meddelande" rows="5" placeholder="Vilka leverantörer och system arbetar ni med?"></textarea>
+            <textarea id="c-meddelande" name="meddelande" rows="3" placeholder="Vilka leverantörer och system arbetar ni med?"></textarea>
           </div>
           <div class="actions">
             <button type="submit" class="btn btn-primary">Skicka meddelande</button>
